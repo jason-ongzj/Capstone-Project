@@ -40,6 +40,9 @@ public class MainActivityFragment extends Fragment
     private int category_id;
     private MainActivityAdapter mAdapter;
 
+    boolean top_articles_loaded = false;
+    boolean latest_articles_loaded = false;
+
     @Nullable
     @BindView(R.id.recyclerView)
     RecyclerView mRecyclerView;
@@ -71,7 +74,7 @@ public class MainActivityFragment extends Fragment
             MyResponseReceiver responseReceiver = new MyResponseReceiver();
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(responseReceiver, topArticlesIntentFilter);
 
-            IntentFilter latestArticlesIntentFilter = new IntentFilter(getString(R.string.get_top_articles));
+            IntentFilter latestArticlesIntentFilter = new IntentFilter(getString(R.string.get_latest_articles));
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(responseReceiver, latestArticlesIntentFilter);
 
             switch (category_id){
@@ -80,7 +83,9 @@ public class MainActivityFragment extends Fragment
                     break;
                 case LATEST_ARTICLES:
                     GetArticlesListService.getLatestArticles(getActivity());
+                    break;
             }
+
         } else {
             switch(category_id){
                 case TOP_ARTICLES:
@@ -91,13 +96,11 @@ public class MainActivityFragment extends Fragment
                     break;
             }
         }
-
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
     }
 
     @Override
@@ -106,14 +109,27 @@ public class MainActivityFragment extends Fragment
         View mRootView = inflater.inflate(R.layout.fragment_main_activity, container, false);
         ButterKnife.bind(this, mRootView);
 
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+            }
+        });
+
         return mRootView;
     }
 
     private void delayLoader(int loaderID){
         try
         {
-            Thread.sleep(1000);
+            Thread.sleep(5000);
             startLoader(loaderID);
+//            Thread.sleep(1000);
         }
         catch(InterruptedException ex)
         {
@@ -156,13 +172,22 @@ public class MainActivityFragment extends Fragment
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        Log.d(TAG, "onLoadFinished: " + cursor.getCount());
+        Log.d(TAG, "onLoadFinished: Category " + category_id + ": " + cursor.getCount());
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         mAdapter = new MainActivityAdapter();
         mAdapter.setContext(getActivity());
         mAdapter.setCursor(cursor);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(linearLayoutManager);
+//        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+//            @Override
+//            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+//                if(!mRecyclerView.canScrollVertically(1)){
+//                    mAdapter.setItemCount();
+//                    mAdapter.notifyDataSetChanged();
+//                }
+//            }
+//        });
     }
 
     @Override
@@ -177,15 +202,26 @@ public class MainActivityFragment extends Fragment
                 case TOP_ARTICLES:
                     String s = intent.getStringExtra("GET_TOP_ARTICLES");
                     Log.d(TAG, "onReceiveTop: " + s);
-                    delayLoader(ID_TOP_ARTICLES_LOADER);
+                    if(!top_articles_loaded) {
+                        delayLoader(ID_TOP_ARTICLES_LOADER);
+                        top_articles_loaded = true;
+                    }
                     break;
                 case LATEST_ARTICLES:
                     s = intent.getStringExtra("GET_LATEST_ARTICLES");
                     Log.d(TAG, "onReceiveLatest: " + s);
-                    delayLoader(ID_LATEST_ARTICLES_LOADER);
+                    if(!latest_articles_loaded) {
+                        delayLoader(ID_LATEST_ARTICLES_LOADER);
+                        latest_articles_loaded = true;
+                    }
+                    break;
             }
 
         }
+    }
+
+    public void updateAdapter(){
+        mAdapter.notifyDataSetChanged();
     }
 
 }

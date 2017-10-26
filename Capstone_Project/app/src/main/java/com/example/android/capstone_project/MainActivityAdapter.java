@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.android.capstone_project.data.ArticleQuery;
 
 import butterknife.BindView;
@@ -22,6 +23,8 @@ public class MainActivityAdapter extends
 
     private Context mContext;
     private Cursor mCursor;
+
+    private int count = 10;
 
 
     public void setContext(Context context) {
@@ -35,9 +38,6 @@ public class MainActivityAdapter extends
 
     public class MainActivityAdapterViewHolder extends RecyclerView.ViewHolder{
 
-        @Nullable
-        @BindView(R.id.card_display_author)
-        TextView authorTv;
         @Nullable
         @BindView(R.id.card_display_title)
         TextView titleTv;
@@ -63,15 +63,31 @@ public class MainActivityAdapter extends
 
     @Override
     public void onBindViewHolder(MainActivityAdapterViewHolder holder, int position) {
+
         if(mCursor != null) {
             mCursor.moveToPosition(position);
-            Log.d("MainActivityAdapter", "onBindViewHolder: " + mCursor.getString(ArticleQuery.AUTHOR));
-            holder.authorTv.setText(mCursor.getString(ArticleQuery.AUTHOR));
+//            Log.d("MainActivityAdapter", "onBindViewHolder: " + mCursor.getString(ArticleQuery.AUTHOR));
+            holder.titleTv.setText(mCursor.getString(ArticleQuery.TITLE));
+            holder.descriptionTv.setText(mCursor.getString(ArticleQuery.DESCRIPTION));
+            String urlToImage = mCursor.getString(ArticleQuery.URL_TO_IMAGE);
+//            if( !urlToImage.equals("") && urlToImage!=null)
+//                Picasso.with(mContext).load(mCursor.getString(ArticleQuery.URL_TO_IMAGE)).into(holder.imageView);
+                Glide.with(mContext).load(mCursor.getString(ArticleQuery.URL_TO_IMAGE)).into(holder.imageView);
+//            else holder.imageView.setMaxHeight(0);
+        }
+        if(position == count - 1){
+            count += 10;
+            notifyDataSetChanged();
+            Log.d("MainActivityAdapter", "onBindViewHolder: " + mCursor.getCount());
         }
     }
 
     @Override
     public int getItemCount() {
-        return 20;
+        return count;
+    }
+
+    public void setItemCount(){
+        count += 10;
     }
 }

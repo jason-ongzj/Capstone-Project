@@ -20,6 +20,7 @@ import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import rx.Observable;
 import rx.Observer;
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -30,6 +31,9 @@ public class GetArticlesListService extends IntentService {
 
     private static final String GET_TOP_ARTICLES = "GetTopArticles";
     private static final String GET_LATEST_ARTICLES = "GetLatestArticles";
+
+    private Subscription subscription;
+    private Subscription articleSubscription;
 
     private NewsAPI newsAPI;
     private static String api_Key = "4bea82e302ea46d188f106ffd0121590";
@@ -65,9 +69,11 @@ public class GetArticlesListService extends IntentService {
             switch (intent.getAction()) {
                 case GET_TOP_ARTICLES:
                     getArticles("top");
+//                    getArticlesFromObservable("top");
                     break;
                 case GET_LATEST_ARTICLES:
                     getArticles("latest");
+//                    getArticlesFromObservable("latest");
                     break;
 
             }
@@ -95,12 +101,21 @@ public class GetArticlesListService extends IntentService {
                     public Observable<Source> call(NewsAPISources newsAPISources) {
                         return Observable.from(newsAPISources.getSources());
                     }
-                }).flatMap(new Func1<Source, Observable<String>>() {
+                })
+//                .filter(new Func1<Source, Boolean>() {
+//                    @Override
+//                    public Boolean call(Source source) {
+//                        return source.getCategory().equals("general");
+//                    }
+//                })
+                .flatMap(new Func1<Source, Observable<String>>() {
             @Override
             public Observable<String> call(Source source) {
                 return Observable.just(source.getId());
             }
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(new Observer<String>() {
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<String>() {
             @Override
             public void onCompleted() {
                 switch(input) {
@@ -112,16 +127,15 @@ public class GetArticlesListService extends IntentService {
                         break;
                     case "latest":
                         Log.d(TAG, "Data loading completed: Latest articles fetched");
-                        localIntent = new Intent(getString(R.string.get_latest_articles));
-                        localIntent.putExtra("GET_LATEST_ARTICLES", "Latest articles fetched");
-                        LocalBroadcastManager.getInstance(mContext).sendBroadcast(localIntent);
+                        Intent latestIntent = new Intent(getString(R.string.get_latest_articles));
+                        latestIntent.putExtra("GET_LATEST_ARTICLES", "Latest articles fetched");
+                        LocalBroadcastManager.getInstance(mContext).sendBroadcast(latestIntent);
                         break;
                 }
             }
 
             @Override
             public void onError(Throwable e) {
-//                e.printStackTrace();
             }
 
             @Override
@@ -134,11 +148,17 @@ public class GetArticlesListService extends IntentService {
                             public Observable<Article> call(NewsAPIArticles newsAPIArticles) {
                                 return Observable.from(newsAPIArticles.getArticles());
                             }
+                        }).filter(new Func1<Article, Boolean>() {
+                            @Override
+                            public Boolean call(Article article) {
+                                return !article.getDescription().equals("");
+                            }
                         })
-                        .subscribeOn(Schedulers.io())
+                        .subscribeOn(Schedulers.newThread())
                         .subscribe(new Observer<Article>() {
                     @Override
                     public void onCompleted() {
+//                        Log.d(TAG, "onCompleted: " + Thread.currentThread().getName());
                     }
 
                     @Override

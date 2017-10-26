@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity
 
     private ViewPager mPager;
     private MyPagerAdapter mPagerAdapter;
+    private Fragment mainActivityFragment;
     private Context mContext;
 
     @Override
@@ -69,15 +70,30 @@ public class MainActivity extends AppCompatActivity
         tabLayout.addTab(tabLayout.newTab().setText("Latest"));
 
         mPagerAdapter = new MyPagerAdapter(getFragmentManager(), tabLayout.getTabCount());
+
         mPager = (ViewPager) findViewById(R.id.pager);
         mPager.setAdapter(mPagerAdapter);
-        mPager.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+
+        mPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        mPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
-            public void onScrollChange(View view, int i, int i1, int i2, int i3) {
-                int pos = mPager.getCurrentItem();
-//                tabLayout.scrollBy(i3, 0);
-                TabLayout.Tab tab = tabLayout.getTabAt(pos);
-                tab.select();
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+//                Toast.makeText(MainActivity.this, "Hello from tab " + position, Toast.LENGTH_SHORT).show();
+//                if (position == 1){
+//                    mainActivityFragment = mPagerAdapter.getItem(position);
+//                    if(mainActivityFragment instanceof MainActivityFragment)
+//                        ((MainActivityFragment) mainActivityFragment).getLatestArticles(MainActivity.this);
+//                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
             }
         });
 
@@ -89,17 +105,13 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-
             }
         });
     }
-
-
 
     @Override
     protected void onDestroy() {
@@ -167,7 +179,11 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public Fragment getItem(int position) {
-            return MainActivityFragment.newInstance(position);
+//            return MainActivityFragment.newInstance(position);
+//            if(position == 0){
+               return MainActivityFragment.newInstance(position);
+//            }
+//            return null;
         }
 
         @Override

@@ -12,11 +12,10 @@ public interface ArticleQuery {
             ArticleContract.ArticleEntry.COLUMN_PUBLISHED_AT
     };
 
-    int _ID = 0;
-    int AUTHOR = 1;
-    int TITLE = 2;
-    int DESCRIPTION = 3;
-    int URL_TO_IMAGE = 4;
-    int URL = 5;
-    int PUBLISHED_AT = 6;
+    int AUTHOR = 0;
+    int TITLE = 1;
+    int DESCRIPTION = 2;
+    int URL_TO_IMAGE = 3;
+    int URL = 4;
+    int PUBLISHED_AT = 5;
 }
