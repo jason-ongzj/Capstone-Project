@@ -3,6 +3,7 @@ package com.example.android.capstone_project;
 import android.app.Fragment;
 import android.app.LoaderManager;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
@@ -23,6 +24,9 @@ import android.view.ViewGroup;
 
 import com.example.android.capstone_project.data.ArticleContract;
 import com.example.android.capstone_project.data.ArticleDbHelper;
+import com.example.android.capstone_project.http.apimodel.Article;
+
+import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -43,6 +47,11 @@ public class MainActivityFragment extends Fragment
     boolean top_articles_loaded = false;
     boolean latest_articles_loaded = false;
 
+    private ArrayList<String> articleList;
+
+    private ArticleDbHelper helper;
+    private SQLiteDatabase db;
+
     @Nullable
     @BindView(R.id.recyclerView)
     RecyclerView mRecyclerView;
@@ -61,14 +70,18 @@ public class MainActivityFragment extends Fragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        articleList = new ArrayList<String>();
+
+        helper = new ArticleDbHelper(getActivity());
+        db = helper.getWritableDatabase();
+
         if (getArguments() != null) {
             category_id = getArguments().getInt("Category_Id");
         }
         if (savedInstanceState == null) {
-            ArticleDbHelper dbHelper = new ArticleDbHelper(getActivity());
-            SQLiteDatabase db = dbHelper.getWritableDatabase();
-            dbHelper.deleteRecords(db);
-            db.close();
+
+            Log.d(TAG, "onCreate: " + Thread.activeCount());
 
             IntentFilter topArticlesIntentFilter = new IntentFilter(getString(R.string.get_top_articles));
             MyResponseReceiver responseReceiver = new MyResponseReceiver();
@@ -109,25 +122,16 @@ public class MainActivityFragment extends Fragment
         View mRootView = inflater.inflate(R.layout.fragment_main_activity, container, false);
         ButterKnife.bind(this, mRootView);
 
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-            }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-            }
-        });
-
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setItemViewCacheSize(500);
+        mRecyclerView.setDrawingCacheEnabled(true);
         return mRootView;
     }
 
     private void delayLoader(int loaderID){
         try
         {
-            Thread.sleep(5000);
+            Thread.sleep(1000);
             startLoader(loaderID);
 //            Thread.sleep(1000);
         }
@@ -142,6 +146,10 @@ public class MainActivityFragment extends Fragment
         if (loaderID == ID_TOP_ARTICLES_LOADER)
             Log.d(TAG, "startLoaderTOP:");
         else Log.d(TAG, "startLoaderLATEST: ");
+    }
+
+    private void restartLoader(int loaderID){
+        getLoaderManager().restartLoader(loaderID, null, this);
     }
 
     @Override
@@ -179,15 +187,39 @@ public class MainActivityFragment extends Fragment
         mAdapter.setCursor(cursor);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(linearLayoutManager);
-//        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-//            @Override
-//            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-//                if(!mRecyclerView.canScrollVertically(1)){
-//                    mAdapter.setItemCount();
-//                    mAdapter.notifyDataSetChanged();
-//                }
-//            }
-//        });
+    }
+
+    private void insertIntoDb(ArrayList<Article> array, String sortBy){
+        String table = "";
+        switch(sortBy){
+            case "top":
+                table = ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE;
+                helper.deleteRecordsFromTopTable(db);
+                break;
+            case "latest":
+                table = ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE;
+                helper.deleteRecordsFromLatestTable(db);
+                break;
+        }
+        db.beginTransaction();
+        for(int i = 0; i < array.size(); i++){
+            ContentValues cv = new ContentValues();
+            Article article = array.get(i);
+            if(article != null) {
+                cv.put(ArticleContract.ArticleEntry._ID, i);
+                cv.put(ArticleContract.ArticleEntry.COLUMN_AUTHOR, article.getAuthor());
+                cv.put(ArticleContract.ArticleEntry.COLUMN_AUTHOR, "");
+                cv.put(ArticleContract.ArticleEntry.COLUMN_TITLE, article.getTitle());
+                cv.put(ArticleContract.ArticleEntry.COLUMN_DESCRIPTION, article.getDescription());
+                cv.put(ArticleContract.ArticleEntry.COLUMN_URL_TO_IMAGE, article.getUrlToImage());
+                cv.put(ArticleContract.ArticleEntry.COLUMN_URL, article.getUrl());
+                cv.put(ArticleContract.ArticleEntry.COLUMN_PUBLISHED_AT, article.getPublishedAt());
+                db.insert(table, null, cv);
+            }
+        }
+        db.setTransactionSuccessful();
+        db.endTransaction();
+        Log.d(TAG, "insertIntoDb: completed");
     }
 
     @Override
@@ -200,18 +232,26 @@ public class MainActivityFragment extends Fragment
         public void onReceive(Context context, Intent intent) {
             switch(category_id){
                 case TOP_ARTICLES:
-                    String s = intent.getStringExtra("GET_TOP_ARTICLES");
-                    Log.d(TAG, "onReceiveTop: " + s);
+                    ArrayList<Article> s = intent.getParcelableArrayListExtra("GET_TOP_ARTICLES");
+                    if (s!=null) {
+                        Log.d(TAG, "onReceiveTop: " + s.size());
+                        Log.d(TAG, "onReceiveTop: " + s.get(1).getTitle());
+                        insertIntoDb(s, "top");
+                    }
                     if(!top_articles_loaded) {
-                        delayLoader(ID_TOP_ARTICLES_LOADER);
+                        startLoader(ID_LATEST_ARTICLES_LOADER);
                         top_articles_loaded = true;
                     }
                     break;
                 case LATEST_ARTICLES:
-                    s = intent.getStringExtra("GET_LATEST_ARTICLES");
-                    Log.d(TAG, "onReceiveLatest: " + s);
+                    s = intent.getParcelableArrayListExtra("GET_LATEST_ARTICLES");
+                    if (s!=null) {
+                        Log.d(TAG, "onReceiveLatest: " + s.size());
+                        Log.d(TAG, "onReceiveLatest: " + s.get(1).getTitle());
+                        insertIntoDb(s, "latest");
+                    }
                     if(!latest_articles_loaded) {
-                        delayLoader(ID_LATEST_ARTICLES_LOADER);
+                        startLoader(ID_LATEST_ARTICLES_LOADER);
                         latest_articles_loaded = true;
                     }
                     break;

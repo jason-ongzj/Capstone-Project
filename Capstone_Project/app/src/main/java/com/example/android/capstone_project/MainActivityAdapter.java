@@ -70,10 +70,9 @@ public class MainActivityAdapter extends
             holder.titleTv.setText(mCursor.getString(ArticleQuery.TITLE));
             holder.descriptionTv.setText(mCursor.getString(ArticleQuery.DESCRIPTION));
             String urlToImage = mCursor.getString(ArticleQuery.URL_TO_IMAGE);
-//            if( !urlToImage.equals("") && urlToImage!=null)
-//                Picasso.with(mContext).load(mCursor.getString(ArticleQuery.URL_TO_IMAGE)).into(holder.imageView);
-                Glide.with(mContext).load(mCursor.getString(ArticleQuery.URL_TO_IMAGE)).into(holder.imageView);
-//            else holder.imageView.setMaxHeight(0);
+            if(urlToImage == null || urlToImage.equals("")){
+                holder.imageView.setMaxHeight(0);
+            } else Glide.with(mContext).load(urlToImage).into(holder.imageView);
         }
         if(position == count - 1){
             count += 10;

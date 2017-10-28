@@ -1,9 +1,12 @@
 package com.example.android.capstone_project.http.apimodel;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Article {
+public class Article implements Parcelable{
 
     @SerializedName("author")
     @Expose
@@ -23,6 +26,42 @@ public class Article {
     @SerializedName("publishedAt")
     @Expose
     private String publishedAt;
+
+    private Article(Parcel in){
+        this.author = in.readString();
+        this.title = in.readString();
+        this.description = in.readString();
+        this.urlToImage = in.readString();
+        this.url = in.readString();
+        this.publishedAt = in.readString();
+    }
+
+    @Override
+    public int describeContents() {
+        return this.hashCode();
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(getAuthor());
+        parcel.writeString(getTitle());
+        parcel.writeString(getDescription());
+        parcel.writeString(getUrlToImage());
+        parcel.writeString(getUrl());
+        parcel.writeString(getPublishedAt());
+    }
+
+    public static final Parcelable.Creator<Article> CREATOR = new Parcelable.Creator<Article>() {
+
+        public Article createFromParcel(Parcel in) {
+            return new Article(in);
+        }
+
+        public Article[] newArray(int size) {
+//            Article[] arrayArticle = new Article[size];
+            return new Article[size];
+        }
+    };
 
     public String getAuthor() {
         return author;

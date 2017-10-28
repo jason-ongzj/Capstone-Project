@@ -20,7 +20,7 @@ public class ArticleDbHelper extends SQLiteOpenHelper{
         final String SQL_CREATE_TOP_ARTICLES_TABLE =
 
                 "CREATE TABLE " + ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE + " (" +
-//                        ArticleContract.ArticleEntry._ID + " INT NOT NULL, " +
+                        ArticleContract.ArticleEntry._ID + " INT NOT NULL, " +
                         ArticleContract.ArticleEntry.COLUMN_AUTHOR + " TEXT, " +
                         ArticleContract.ArticleEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
                         ArticleContract.ArticleEntry.COLUMN_DESCRIPTION + " TEXT, " +
@@ -31,7 +31,7 @@ public class ArticleDbHelper extends SQLiteOpenHelper{
         final String SQL_CREATE_LATEST_ARTICLES_TABLE =
 
                 "CREATE TABLE " + ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE + " (" +
-//                        ArticleContract.ArticleEntry._ID + " INT NOT NULL, " +
+                        ArticleContract.ArticleEntry._ID + " INT NOT NULL, " +
                         ArticleContract.ArticleEntry.COLUMN_AUTHOR + " TEXT, " +
                         ArticleContract.ArticleEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
                         ArticleContract.ArticleEntry.COLUMN_DESCRIPTION + " TEXT, " +
@@ -47,8 +47,11 @@ public class ArticleDbHelper extends SQLiteOpenHelper{
         onCreate(sqLiteDatabase);
     }
 
-    public void deleteRecords(SQLiteDatabase sqLiteDatabase){
+    public void deleteRecordsFromTopTable(SQLiteDatabase sqLiteDatabase){
         sqLiteDatabase.execSQL("DELETE FROM " + ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE);
+    }
+
+    public void deleteRecordsFromLatestTable(SQLiteDatabase sqLiteDatabase){
         sqLiteDatabase.execSQL("DELETE FROM " + ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE);
     }
 }
