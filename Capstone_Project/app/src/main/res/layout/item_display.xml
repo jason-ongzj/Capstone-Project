@@ -8,6 +8,7 @@
     android:layout_margin="4dp">
 
     <LinearLayout
+        android:id="@+id/card_display"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="0dp"

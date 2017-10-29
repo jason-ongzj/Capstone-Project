@@ -11,15 +11,15 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <provider
-            android:name="com.example.android.capstone_project.data.ArticleProvider"
+            android:name=".data.ArticleProvider"
             android:authorities="com.example.android.capstone_project"
-            android:exported="false"/>
+            android:exported="false" />
 
         <activity
+            android:name=".MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:name="com.example.android.capstone_project.MainActivity"
+            android:launchMode="singleTop"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -29,7 +29,10 @@
             </intent-filter>
         </activity>
 
-        <service android:name="com.example.android.capstone_project.GetArticlesListService"/>
+        <service android:name=".GetArticlesListService" />
+
+        <activity android:name=".WebViewActivity"
+            android:parentActivityName=".MainActivity"/>
     </application>
 
 </manifest>

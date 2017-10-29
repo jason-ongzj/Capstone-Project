@@ -25,6 +25,7 @@ public interface NewsAPI {
     Call<NewsAPISources> getSources(@Query("language") String language);
 
     @GET("sources")
-    Observable<NewsAPISources> getSourcesObservable(@Query("language") String language);
+    Observable<NewsAPISources> getSourcesObservable(@Query("category") String category,
+                                                    @Query("language") String language);
 
 }

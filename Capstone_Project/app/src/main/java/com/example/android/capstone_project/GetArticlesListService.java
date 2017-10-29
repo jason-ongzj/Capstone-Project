@@ -1,14 +1,12 @@
 package com.example.android.capstone_project;
 
 import android.app.IntentService;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.example.android.capstone_project.data.ArticleContract;
 import com.example.android.capstone_project.http.NewsAPI;
 import com.example.android.capstone_project.http.apimodel.Article;
 import com.example.android.capstone_project.http.apimodel.NewsAPIArticles;
@@ -16,6 +14,7 @@ import com.example.android.capstone_project.http.apimodel.NewsAPISources;
 import com.example.android.capstone_project.http.apimodel.Source;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import retrofit2.Retrofit;
@@ -35,6 +34,8 @@ public class GetArticlesListService extends IntentService {
 
     private AtomicInteger topSourceIndex = new AtomicInteger(0);
     private AtomicInteger latestSourceIndex = new AtomicInteger(0);
+
+    private List<Source> sourcesList;
 
     private ArrayList<String> topArticlesInsertArray = new ArrayList<>();
     private ArrayList<String> latestArticlesInsertArray = new ArrayList<>();
@@ -69,6 +70,7 @@ public class GetArticlesListService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
+        Log.d(TAG, "onHandleIntent: " + Thread.activeCount());
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(NewsAPI.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -87,37 +89,16 @@ public class GetArticlesListService extends IntentService {
         }
     }
 
-    private void insertArticles(Article article, String category) {
-        ContentValues cv = new ContentValues();
-        cv.put(ArticleContract.ArticleEntry.COLUMN_AUTHOR, article.getAuthor());
-        cv.put(ArticleContract.ArticleEntry.COLUMN_TITLE, article.getTitle());
-        cv.put(ArticleContract.ArticleEntry.COLUMN_DESCRIPTION, article.getDescription());
-        cv.put(ArticleContract.ArticleEntry.COLUMN_URL_TO_IMAGE, article.getUrlToImage());
-        cv.put(ArticleContract.ArticleEntry.COLUMN_URL, article.getUrl());
-        cv.put(ArticleContract.ArticleEntry.COLUMN_PUBLISHED_AT, article.getPublishedAt());
-    }
-
     private void getArticles(final String input) {
-        newsAPI.getSourcesObservable("en")
+        newsAPI.getSourcesObservable("", "en")
                 .flatMap(new Func1<NewsAPISources, Observable<Source>>() {
                     @Override
                     public Observable<Source> call(NewsAPISources newsAPISources) {
-                        return Observable.from(newsAPISources.getSources());
+                        sourcesList = newsAPISources.getSources();
+                        return Observable.from(sourcesList);
                     }
                 })
-//                .filter(new Func1<Source, Boolean>() {
-//                    @Override
-//                    public Boolean call(Source source) {
-//                        return source.getCategory().equals("general");
-//                    }
-//                })
-                .flatMap(new Func1<Source, Observable<String>>() {
-                    @Override
-                    public Observable<String> call(Source source) {
-                        return Observable.just(source.getId());
-                    }
-                })
-                .subscribeOn(Schedulers.newThread()).subscribe(new Observer<String>() {
+                .subscribeOn(Schedulers.newThread()).subscribe(new Observer<Source>() {
             @Override
             public void onCompleted() {
             }
@@ -128,8 +109,7 @@ public class GetArticlesListService extends IntentService {
             }
 
             @Override
-            public void onNext(final String s) {
-                final ArrayList<String> articlesList = new ArrayList<>();
+            public void onNext(final Source source) {
                 final ArrayList<Article> arrayArticle = new ArrayList<Article>();
                 switch (input) {
                     case "top":
@@ -142,8 +122,8 @@ public class GetArticlesListService extends IntentService {
                         break;
                 }
                 // Go for top or latest, popular does not return any results
-                final AtomicInteger articleID = new AtomicInteger(0);
-                newsAPI.getArticlesObservable(s, input, api_Key)
+
+                newsAPI.getArticlesObservable(source.getId(), input, api_Key)
                         .flatMap(new Func1<NewsAPIArticles, Observable<Article>>() {
                             @Override
                             public Observable<Article> call(NewsAPIArticles newsAPIArticles) {
@@ -162,13 +142,9 @@ public class GetArticlesListService extends IntentService {
                                 case "top":
 
                                     // Add all insertions into a single arraylist, to be parsed in a
-                                    // single transaction in the database ExecSQL.
+                                    // single transaction in the database through execSQL.
 
-                                    topArticlesInsertArray.addAll(articlesList);
                                     topArticlesArray.addAll(arrayArticle);
-                                    Log.d(TAG, "onCompleted: topArticlesStringArray" + topArticlesInsertArray.size());
-                                    Log.d(TAG, "onCompleted: topArticlesArray " + topArticlesArray.size());
-                                    Log.d(TAG, "onReceive: " + Thread.activeCount());
 
                                     // Use thread count as an estimate the completion of the observable, since
                                     // RxJava 2 does not have defer function. Thread active count is merely an
@@ -176,8 +152,11 @@ public class GetArticlesListService extends IntentService {
                                     // a single broadcast is released, so that we can prevent double entries in the
                                     // database. This does not guarantee the capture of the major sources of data
 
-                                    if (Thread.activeCount() <= 25 && !topArticlesFetched) {
-
+                                    Log.d(TAG, "onReceiveTop: " + Thread.activeCount());
+                                    if (Thread.activeCount() <= 25 && !latestArticlesFetched) {
+                                        Log.d(TAG, "onCompletedTop: " + source.getId());
+//                                        Log.d(TAG, "onCompleted: " + sourcesList.get(sourcesList.size()-1).getName());
+//                                    if (topArticleID == sourcesSize) {
                                         // Set boolean to be true first so that the next thread(or next observer
                                         // subscribed on another thread will not be able to run the code below.
                                         // Else multiple broadcasts could result.
@@ -192,15 +171,16 @@ public class GetArticlesListService extends IntentService {
 
                                 case "latest":
 
-                                    latestArticlesInsertArray.addAll(articlesList);
                                     latestArticlesArray.addAll(arrayArticle);
 
                                     // Same as case for "top"
 
-                                    Log.d(TAG, "onCompleted: latestArticlesStringArray" + latestArticlesInsertArray.size());
-                                    Log.d(TAG, "onCompleted: latestArticlesArray " + latestArticlesArray.size());
-                                    Log.d(TAG, "onReceive: " + Thread.activeCount());
-                                    if (Thread.activeCount() <= 10 && !latestArticlesFetched) {
+//                                    Log.d(TAG, "onCompleted: latestArticlesStringArray" + latestArticlesInsertArray.size());
+//                                    Log.d(TAG, "onCompleted: latestArticlesArray " + latestArticlesArray.size());
+                                    Log.d(TAG, "onReceiveLatest: " + Thread.activeCount());
+                                    if (Thread.activeCount() <= 25 && !latestArticlesFetched) {
+                                        Log.d(TAG, "onCompletedLatest: " + source.getId());
+                                        Log.d(TAG, "onCompleted: " + sourcesList.get(sourcesList.size()-1));
                                         latestArticlesFetched = true;
                                         Intent latestIntent = new Intent(getString(R.string.get_latest_articles));
                                         latestIntent.putParcelableArrayListExtra("GET_LATEST_ARTICLES", latestArticlesArray);
@@ -212,31 +192,14 @@ public class GetArticlesListService extends IntentService {
 
                         @Override
                         public void onError(Throwable e) {
-                            e.printStackTrace();
+//                            e.printStackTrace();
+//                            sourcesList.remove(sourcesList.remove())
                         }
 
                         @Override
                         public void onNext(Article article) {
+                            article.setCategory(source.getCategory());
                             arrayArticle.add(article);
-                            articleID.getAndIncrement();
-                            switch (input) {
-                                case "top":
-                                    String sql = "INSERT INTO " + ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE
-                                            + " VALUES"
-                                            + "(" + articleID + ", \'" + article.getAuthor() + "\', \'" + article.getTitle() +
-                                            "\', \'" + article.getDescription() + "\', \'" + article.getUrlToImage() +
-                                            "\', \'" + article.getUrl() + "\', \'" + article.getPublishedAt() + "\');";
-                                    articlesList.add(sql);
-                                    break;
-                                case "latest":
-                                    sql = "INSERT INTO " + ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE
-                                            + "  VALUES"
-                                            + "(" + articleID + ", \'" + article.getAuthor() + "\', \'" + article.getTitle() +
-                                            "\', \'" + article.getDescription() + "\', \'" + article.getUrlToImage() +
-                                            "\', \'" + article.getUrl() + "\', \'" + article.getPublishedAt() + "\');";
-                                    articlesList.add(sql);
-                                    break;
-                            }
                         }
                     });
             }

@@ -13,10 +13,10 @@ import android.support.annotation.Nullable;
 public class ArticleProvider extends ContentProvider {
 
     private static final int TOP_ARTICLES = 100;
-//    private static final int TOP_ARTICLES_WITH_ID = 101;
+    private static final int TOP_ARTICLES_WITH_ID = 101;
 
     private static final int LATEST_ARTICLES = 200;
-//    private static final int LATEST_ARTICLES_WITH_ID = 201;
+    private static final int LATEST_ARTICLES_WITH_ID = 201;
 
     private ArticleDbHelper mArticleDbHelper;
     private static final UriMatcher sUriMatcher = buildUriMatcher();
@@ -26,10 +26,10 @@ public class ArticleProvider extends ContentProvider {
         final String authority = ArticleContract.CONTENT_AUTHORITY;
 
         matcher.addURI(authority, ArticleContract.PATH_TOP_ARTICLES, TOP_ARTICLES);
-//        matcher.addURI(authority, ArticleContract.PATH_TOP_ARTICLES + "/#", TOP_ARTICLES_WITH_ID);
+        matcher.addURI(authority, ArticleContract.PATH_TOP_ARTICLES + "/#", TOP_ARTICLES_WITH_ID);
 
         matcher.addURI(authority, ArticleContract.PATH_LATEST_ARTICLES, LATEST_ARTICLES);
-//        matcher.addURI(authority, ArticleContract.PATH_LATEST_ARTICLES + "/#", LATEST_ARTICLES_WITH_ID);
+        matcher.addURI(authority, ArticleContract.PATH_LATEST_ARTICLES + "/#", LATEST_ARTICLES_WITH_ID);
 
         return matcher;
     }

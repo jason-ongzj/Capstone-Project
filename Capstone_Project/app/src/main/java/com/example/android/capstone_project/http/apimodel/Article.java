@@ -26,6 +26,7 @@ public class Article implements Parcelable{
     @SerializedName("publishedAt")
     @Expose
     private String publishedAt;
+    private String category;
 
     private Article(Parcel in){
         this.author = in.readString();
@@ -34,6 +35,7 @@ public class Article implements Parcelable{
         this.urlToImage = in.readString();
         this.url = in.readString();
         this.publishedAt = in.readString();
+        this.category = in.readString();
     }
 
     @Override
@@ -49,6 +51,7 @@ public class Article implements Parcelable{
         parcel.writeString(getUrlToImage());
         parcel.writeString(getUrl());
         parcel.writeString(getPublishedAt());
+        parcel.writeString(getCategory());
     }
 
     public static final Parcelable.Creator<Article> CREATOR = new Parcelable.Creator<Article>() {
@@ -58,7 +61,6 @@ public class Article implements Parcelable{
         }
 
         public Article[] newArray(int size) {
-//            Article[] arrayArticle = new Article[size];
             return new Article[size];
         }
     };
@@ -111,4 +113,11 @@ public class Article implements Parcelable{
         this.publishedAt = publishedAt;
     }
 
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getCategory(){
+        return this.category;
+    }
 }
