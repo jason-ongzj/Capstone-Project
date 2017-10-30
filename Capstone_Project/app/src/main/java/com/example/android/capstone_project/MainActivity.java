@@ -16,7 +16,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,14 +26,12 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener{
+        implements NavigationView.OnNavigationItemSelectedListener,
+        DataInterface{
 
     @BindView(R.id.toolbar) Toolbar toolbar;
     @BindView(R.id.fab) FloatingActionButton fab;
@@ -44,15 +42,19 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.spinner) Spinner spinner;
 
     private String[] spinnerItems = new String[] {"All", "Business", "Entertainment", "Gaming", "General",
-            "Music", "Politics", "Science-And-Nature", "Sport", "Technology"};
+            "Music", "Politics", "Sport", "Technology"};
 
     private ViewPager mPager;
     private MyPagerAdapter mPagerAdapter;
-    private Fragment mainActivityFragment;
+    private NavigationFragment navigationFragment;
     private Context mContext;
     public static final String TAG = "MainActivity";
 
     private String spinnerSelection = "all";
+    private boolean itemSelected = false;
+
+    private static final int ID_TOP_ARTICLES_LOADER = 156;
+    private static final int ID_LATEST_ARTICLES_LOADER = 249;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -60,6 +62,8 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
+
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -102,7 +106,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this,
+        final ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item, spinnerItems);
 
         spinner.setAdapter(spinnerAdapter);
@@ -111,24 +115,33 @@ public class MainActivity extends AppCompatActivity
             public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
                 Toast.makeText(MainActivity.this, "The planet is " +
                         adapterView.getItemAtPosition(pos).toString(), Toast.LENGTH_LONG).show();
-//                if(savedInstanceState != null) {
+                if(itemSelected) {
                     spinnerSelection = adapterView.getItemAtPosition(pos).toString().toLowerCase();
 
-                Log.d(TAG, "onItemSelected: "+ mPagerAdapter.getItem(1).toString());
-//                Fragment fragment = getFragmentManager().getFragment(null, "Fragment 1");
-//                Log.d(TAG, "onItemSelected: " + fragment.toString());
-//                    Log.d(TAG, "onItemSelected: " + fragmentList.size());
-//                    for(int i = 0; i < fragmentList.size(); i++){
-//                        Log.d(TAG, "onItemSelected: " + fragmentList.get(i).toString());
-//                    }
-
-//                }
+                    Fragment fragment_1 = mPagerAdapter.getRegisteredFragment(0);
+                    Fragment fragment_2 = mPagerAdapter.getRegisteredFragment(1);
+                    if (fragment_1 instanceof MainActivityFragment) {
+                        ((MainActivityFragment) fragment_1).restartLoader(ID_TOP_ARTICLES_LOADER, spinnerSelection);
+                    }
+                    if(fragment_2 instanceof MainActivityFragment) {
+                        ((MainActivityFragment) fragment_2).restartLoader(ID_LATEST_ARTICLES_LOADER, spinnerSelection);
+                    }
+                }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
             }
         });
+    }
+
+    public void setItemSelectedTrue(){
+        itemSelected = true;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
     }
 
     public String getSpinnerSelection(){
@@ -194,16 +207,21 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    @Override
+    public NavigationFragment getNavigationFragment() {
+        navigationFragment = (NavigationFragment) getFragmentManager()
+                .findFragmentById(R.id.fragment_nav_display);
+        return navigationFragment;
+    }
+
     private class MyPagerAdapter extends FragmentStatePagerAdapter {
-        public static final String TAG = "MyPagerAdapter";
-        private Map<Integer, String> mFragmentTags;
+        private SparseArray<Fragment> registeredFragments = new SparseArray<>();
 
         int tabCount;
 
         public MyPagerAdapter(FragmentManager fm, int mTabCount) {
             super(fm);
             this.tabCount = mTabCount;
-            mFragmentTags = new HashMap<Integer, String>();
         }
 
         @Override
@@ -219,20 +237,13 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public Object instantiateItem(ViewGroup container, int position) {
-            Object obj = super.instantiateItem(container, position);
-            if(obj instanceof Fragment){
-                Fragment f = (Fragment) obj;
-                String tag = f.getTag();
-                mFragmentTags.put(position, tag);
-            }
-            return obj;
+            Fragment fragment = (Fragment) super.instantiateItem(container, position);
+            registeredFragments.put(position, fragment);
+            return fragment;
         }
 
-        public Fragment getFragment(int position){
-            String tag = mFragmentTags.get(position);
-            if(tag == null)
-                return null;
-            return getFragmentManager().findFragmentByTag(tag);
+        public Fragment getRegisteredFragment(int position){
+            return registeredFragments.get(position);
         }
     }
 }

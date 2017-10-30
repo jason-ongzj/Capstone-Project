@@ -81,6 +81,7 @@ public class MainActivityAdapter extends
                 holder.imageView.setMaxHeight(0);
             } else Glide.with(mContext).load(urlToImage).into(holder.imageView);
         }
+
     }
 
     @Override

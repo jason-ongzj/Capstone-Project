@@ -20,9 +20,8 @@
 
             <Spinner
                 android:id="@+id/spinner"
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:popupTheme="@color/cardview_light_background">
+                android:layout_width="150dp"
+                android:layout_height="match_parent">
             </Spinner>
 
         </android.support.v7.widget.Toolbar>

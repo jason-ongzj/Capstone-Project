@@ -37,9 +37,6 @@ public class GetArticlesListService extends IntentService {
 
     private List<Source> sourcesList;
 
-    private ArrayList<String> topArticlesInsertArray = new ArrayList<>();
-    private ArrayList<String> latestArticlesInsertArray = new ArrayList<>();
-
     private ArrayList<Article> topArticlesArray = new ArrayList<Article>();
     private ArrayList<Article> latestArticlesArray = new ArrayList<Article>();
 
@@ -90,6 +87,7 @@ public class GetArticlesListService extends IntentService {
     }
 
     private void getArticles(final String input) {
+        final ArrayList<String> articleSourcesList = new ArrayList<String>();
         newsAPI.getSourcesObservable("", "en")
                 .flatMap(new Func1<NewsAPISources, Observable<Source>>() {
                     @Override
@@ -101,6 +99,7 @@ public class GetArticlesListService extends IntentService {
                 .subscribeOn(Schedulers.newThread()).subscribe(new Observer<Source>() {
             @Override
             public void onCompleted() {
+
             }
 
             @Override
@@ -110,6 +109,7 @@ public class GetArticlesListService extends IntentService {
 
             @Override
             public void onNext(final Source source) {
+                articleSourcesList.add(source.getName());
                 final ArrayList<Article> arrayArticle = new ArrayList<Article>();
                 switch (input) {
                     case "top":
@@ -138,6 +138,8 @@ public class GetArticlesListService extends IntentService {
                     .subscribe(new Observer<Article>() {
                         @Override
                         public void onCompleted() {
+//                            Log.d(TAG, "source name: " + source.getName());
+//                            articleSourceList.add(source.getName());
                             switch (input) {
                                 case "top":
 
@@ -164,8 +166,8 @@ public class GetArticlesListService extends IntentService {
                                         topArticlesFetched = true;
                                         Intent localIntent = new Intent(getString(R.string.get_top_articles));
                                         localIntent.putParcelableArrayListExtra("GET_TOP_ARTICLES", topArticlesArray);
+                                        localIntent.putStringArrayListExtra("GET_TOP_ARTICLES_SOURCES", articleSourcesList);
                                         LocalBroadcastManager.getInstance(mContext).sendBroadcast(localIntent);
-
                                     }
                                     break;
 
@@ -184,6 +186,7 @@ public class GetArticlesListService extends IntentService {
                                         latestArticlesFetched = true;
                                         Intent latestIntent = new Intent(getString(R.string.get_latest_articles));
                                         latestIntent.putParcelableArrayListExtra("GET_LATEST_ARTICLES", latestArticlesArray);
+                                        latestIntent.putStringArrayListExtra("GET_LATEST_ARTICLES_SOURCES", articleSourcesList);
                                         LocalBroadcastManager.getInstance(mContext).sendBroadcast(latestIntent);
                                     }
                                     break;
@@ -192,8 +195,6 @@ public class GetArticlesListService extends IntentService {
 
                         @Override
                         public void onError(Throwable e) {
-//                            e.printStackTrace();
-//                            sourcesList.remove(sourcesList.remove())
                         }
 
                         @Override
