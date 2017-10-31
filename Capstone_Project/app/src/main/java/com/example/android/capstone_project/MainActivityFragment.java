@@ -21,7 +21,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
 
@@ -36,7 +35,10 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivityFragment extends Fragment
-    implements LoaderManager.LoaderCallbacks<Cursor>{
+    implements LoaderManager.LoaderCallbacks<Cursor>,
+    NavigationAdapter.OnClickHandler{
+
+
 
     public final int TOP_ARTICLES = 0;
     public final int LATEST_ARTICLES = 1;
@@ -44,9 +46,13 @@ public class MainActivityFragment extends Fragment
 
     private static final int ID_TOP_ARTICLES_LOADER = 156;
     private static final int ID_LATEST_ARTICLES_LOADER = 249;
-//
+
     public ArrayList<String> articleSourcesList;
     private DataInterface mCallback;
+
+    private static String source_category;
+    private static String source_item = "";
+    private Cursor sourceCursor;
 
     private int category_id;
     private MainActivityAdapter mAdapter;
@@ -59,8 +65,18 @@ public class MainActivityFragment extends Fragment
     private Spinner spinner;
     private String spinnerSelection = "all";
 
-    private String[] spinnerItems = new String[] {"All", "Business", "Entertainment", "Gaming", "General",
-            "Music", "Politics", "Sport", "Technology"};
+    private String[] spinnerItems = new String[] {"all", "business", "entertainment", "gaming", "general",
+            "music", "politics", "science-and-nature", "sport", "technology"};
+
+    private int SPINNER_BUSINESS = 1;
+    private int SPINNER_ENTERTAINMENT = 2;
+    private int SPINNER_GAMING = 3;
+    private int SPINNER_GENERAL = 4;
+    private int SPINNER_MUSIC = 5;
+    private int SPINNER_POLITICS = 6;
+    private int SPINNER_SCIENCE_NATURE = 7;
+    private int SPINNER_SPORT = 8;
+    private int SPINNER_TECHNOLOGY = 9;
 
     @Nullable
     @BindView(R.id.recyclerView)
@@ -75,6 +91,44 @@ public class MainActivityFragment extends Fragment
         args.putInt("Category_Id", id);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onSourceItemClicked(String source, String category) {
+//        source_category = category;
+        source_item = source;
+        switch(category){
+            case "business":
+                spinner.setSelection(SPINNER_BUSINESS);
+                break;
+            case "entertainment":
+                spinner.setSelection(SPINNER_ENTERTAINMENT);
+                break;
+            case "gaming":
+                spinner.setSelection(SPINNER_GAMING);
+                break;
+            case "general":
+                spinner.setSelection(SPINNER_GENERAL);
+                break;
+            case "music":
+                spinner.setSelection(SPINNER_MUSIC);
+                break;
+            case "politics":
+                spinner.setSelection(SPINNER_POLITICS);
+                break;
+            case "science-and-nature":
+                spinner.setSelection(SPINNER_SCIENCE_NATURE);
+                break;
+            case "sport":
+                spinner.setSelection(SPINNER_SPORT);
+                break;
+            case "technology":
+                spinner.setSelection(SPINNER_TECHNOLOGY);
+                break;
+        }
+        mCallback.closeDrawer();
+//        source_category = "";
+//        source_item = "";
     }
 
     @Override
@@ -130,13 +184,6 @@ public class MainActivityFragment extends Fragment
         }
     }
 
-    public void restartLoader(int loaderID, String itemSelected){
-        spinnerSelection = itemSelected;
-        getLoaderManager().restartLoader(loaderID, null, this);
-        mAdapter.notifyDataSetChanged();
-        Log.d(TAG, "restartLoader: updating" + category_id);
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              final Bundle savedInstanceState) {
@@ -154,82 +201,118 @@ public class MainActivityFragment extends Fragment
         return mRootView;
     }
 
-    public void startLoader(int loaderID){
-        getLoaderManager().initLoader(loaderID, null, this);
-        if (loaderID == ID_TOP_ARTICLES_LOADER)
-            Log.d(TAG, "startLoaderTOP:");
-        else Log.d(TAG, "startLoaderLATEST: ");
-    }
-
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String[] selectionArgs = new String[] {spinnerSelection};
+        spinnerSelection = ((MainActivity) getActivity()).getSpinnerSelection();
+//        Toast.makeText(getActivity(), source_item, Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "onCreateLoader: " + source_item);
+        Log.d(TAG, "onCreateLoader: " + spinnerSelection);
+        String[] sourceSelection = new String[] {source_item};
         switch(category_id){
             case TOP_ARTICLES:
                 Uri top_articles_uri = ArticleContract.ArticleEntry.TOP_URI;
                 Log.d(TAG, "onCreateLoader: " + top_articles_uri.toString());
                 if(spinnerSelection.equals("all")){
-                    return new CursorLoader(getActivity(),
-                            top_articles_uri,
-                            ArticleQuery.PROJECTION,
-                            null,
-                            null,
-                            null);
-                } else
-                    return new CursorLoader(getActivity(),
-                        top_articles_uri,
-                        ArticleQuery.PROJECTION,
-                        "Category=?",
-                        selectionArgs,
-                        null);
+                    source_item = "";
+                    return new CursorLoader(getActivity(), top_articles_uri, ArticleQuery.PROJECTION,
+                            null, null, null);
+
+                } else {
+
+                    if (source_item.equals("")) {
+                        return new CursorLoader(getActivity(), top_articles_uri, ArticleQuery.PROJECTION,
+                                "Category=?", selectionArgs, null);
+                    } else {
+                        source_item = "";
+                        return new CursorLoader(getActivity(), top_articles_uri, ArticleQuery.PROJECTION,
+                                "Source=?", sourceSelection, null);
+                    }
+
+                }
+
             case LATEST_ARTICLES:
                 Uri latest_articles_uri = ArticleContract.ArticleEntry.LATEST_URI;
                 Log.d(TAG, "onCreateLoader: " + latest_articles_uri.toString());
                 if(spinnerSelection.equals("all")){
-                    return new CursorLoader(getActivity(),
-                            latest_articles_uri,
-                            ArticleQuery.PROJECTION,
-                            null,
-                            null,
-                            null);
-                } else return new CursorLoader(getActivity(),
-                        latest_articles_uri,
-                        ArticleQuery.PROJECTION,
-                        "Category=?",
-                        selectionArgs,
-                        null);
+                    source_item = "";
+                    return new CursorLoader(getActivity(), latest_articles_uri, ArticleQuery.PROJECTION,
+                            null, null, null);
+
+                } else {
+
+                    if (source_item.equals("")) {
+                        return new CursorLoader(getActivity(), latest_articles_uri, ArticleQuery.PROJECTION,
+                                "Category=?", selectionArgs, null);
+                    } else {
+                        source_item = "";
+                        return new CursorLoader(getActivity(), latest_articles_uri, ArticleQuery.PROJECTION,
+                                "Source=?", sourceSelection, null);
+                    }
+                }
             default:
                 throw new RuntimeException("Loader not implemented");
         }
+
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-//        Log.d(TAG, "onLoadFinished: Category " + category_id + ": " + cursor.getCount());
-        fillNavigationDrawer();
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+        if(getActivity() instanceof MainActivity)
+            ((MainActivity) getActivity()).setItemSelectedTrue();
 
-        switch (category_id){
-            case TOP_ARTICLES:
-                mAdapter = new MainActivityAdapter();
-                mAdapter.setContext(getActivity());
-                mAdapter.setCursor(cursor);
-                mRecyclerView.setAdapter(mAdapter);
-                mRecyclerView.setLayoutManager(linearLayoutManager);
-                break;
-            case LATEST_ARTICLES:
-                mAdapter = new MainActivityAdapter();
-                mAdapter.setContext(getActivity());
-                mAdapter.setCursor(cursor);
-                mRecyclerView.setAdapter(mAdapter);
-                mRecyclerView.setLayoutManager(linearLayoutManager);
-                break;
-        }
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+        mAdapter = new MainActivityAdapter();
+        mAdapter.setContext(getActivity());
+        mAdapter.setCursor(cursor);
+        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setLayoutManager(linearLayoutManager);
     }
 
     @Override
-    public void onLoaderReset(android.content.Loader<Cursor> loader) {
+    public void onLoaderReset(Loader<Cursor> loader) {
         mAdapter.setCursor(null);
+    }
+
+    private void updateNavAdapter(){
+        ListView listView = mCallback.getListView();
+
+        if(sourceCursor!=null){
+            sourceCursor.close();
+        }
+
+        if(articleSourcesList != null) {
+            sourceCursor = querySources();
+            NavigationAdapter navAdapter = new NavigationAdapter(getActivity(), this);
+            navAdapter.setCursor(sourceCursor);
+            listView.setAdapter(navAdapter);
+        }
+    }
+
+    private Cursor querySources(){
+        String sql = "SELECT " + ArticleContract.ArticleEntry.COLUMN_SOURCE + ", "
+                    + ArticleContract.ArticleEntry.COLUMN_CATEGORY + " FROM "
+                    + ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE + " GROUP BY "
+                    + ArticleContract.ArticleEntry.COLUMN_SOURCE + " UNION "
+                    + "SELECT " + ArticleContract.ArticleEntry.COLUMN_SOURCE + ", "
+                    + ArticleContract.ArticleEntry.COLUMN_CATEGORY + " FROM "
+                    + ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE + " GROUP BY "
+                    + ArticleContract.ArticleEntry.COLUMN_SOURCE;
+        Log.d(TAG, "querySources: " + sql);
+        SQLiteDatabase sqlDb = helper.getReadableDatabase();
+        Cursor cursor = sqlDb.rawQuery(sql, null);
+        return cursor;
+    }
+
+    public void startLoader(int loaderID){
+        getLoaderManager().initLoader(loaderID, null, this);
+    }
+
+    public void restartLoader(int loaderID, String itemSelected){
+        spinnerSelection = itemSelected;
+        getLoaderManager().restartLoader(loaderID, null, this);
+        mAdapter.notifyDataSetChanged();
+        Log.d(TAG, "restartLoader: updating" + category_id);
     }
 
     private void insertIntoDb(ArrayList<Article> array, String sortBy){
@@ -257,18 +340,14 @@ public class MainActivityFragment extends Fragment
                 cv.put(ArticleContract.ArticleEntry.COLUMN_URL, article.getUrl());
                 cv.put(ArticleContract.ArticleEntry.COLUMN_PUBLISHED_AT, article.getPublishedAt());
                 cv.put(ArticleContract.ArticleEntry.COLUMN_CATEGORY, article.getCategory());
+                cv.put(ArticleContract.ArticleEntry.COLUMN_SOURCE, article.getSource());
                 db.insert(table, null, cv);
             }
         }
         db.setTransactionSuccessful();
         db.endTransaction();
         Log.d(TAG, "insertIntoDb: completed");
-
-        if(getActivity() instanceof MainActivity)
-           ((MainActivity) getActivity()).setItemSelectedTrue();
     }
-
-
 
     private class MyResponseReceiver extends BroadcastReceiver {
         @Override
@@ -278,10 +357,10 @@ public class MainActivityFragment extends Fragment
                     ArrayList<Article> s = intent.getParcelableArrayListExtra("GET_TOP_ARTICLES");
                     articleSourcesList = intent.getStringArrayListExtra("GET_TOP_ARTICLES_SOURCES");
                     if (s!=null) {
-                        Log.d(TAG, "onReceiveTop: " + s.size());
                         Log.d(TAG, "onReceiveTop Example: " + s.get(1).getTitle());
                         Log.d(TAG, "onReceive SourceSize: " + articleSourcesList.size());
                         insertIntoDb(s, "top");
+                        updateNavAdapter();
                     }
                     if(!top_articles_loaded) {
                         startLoader(ID_TOP_ARTICLES_LOADER);
@@ -292,11 +371,10 @@ public class MainActivityFragment extends Fragment
                     s = intent.getParcelableArrayListExtra("GET_LATEST_ARTICLES");
                     articleSourcesList = intent.getStringArrayListExtra("GET_LATEST_ARTICLES_SOURCES");
                     if (s!=null) {
-                        Log.d(TAG, "onReceiveLatest: " + s.size());
                         Log.d(TAG, "onReceiveLatest Example: " + s.get(1).getTitle());
                         Log.d(TAG, "onReceive SourceSize: " + articleSourcesList.size());
-                        listSources();
                         insertIntoDb(s, "latest");
+                        updateNavAdapter();
                     }
                     if(!latest_articles_loaded) {
                         startLoader(ID_LATEST_ARTICLES_LOADER);
@@ -304,24 +382,6 @@ public class MainActivityFragment extends Fragment
                     }
                     break;
             }
-        }
-    }
-
-    private void fillNavigationDrawer(){
-        if(articleSourcesList != null) {
-            Log.d(TAG, "fillNavigationDrawer: " + articleSourcesList.size());
-            String[] sources = articleSourcesList.toArray(new String[articleSourcesList.size()]);
-            Log.d(TAG, "fillNavigationDrawer: " + sources.length);
-            ListView listview = mCallback.getNavigationFragment().getListView();
-            ArrayAdapter<String> listViewAdapter = new ArrayAdapter<>(getActivity(),
-                    android.R.layout.simple_expandable_list_item_1, sources);
-            listview.setAdapter(listViewAdapter);
-        }
-    }
-
-    private void listSources(){
-        for(int i = 0; i < articleSourcesList.size(); i++){
-            Log.d(TAG, "listSources: " + articleSourcesList.get(i));
         }
     }
 }

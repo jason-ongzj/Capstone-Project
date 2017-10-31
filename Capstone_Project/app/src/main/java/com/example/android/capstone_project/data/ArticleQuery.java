@@ -10,7 +10,8 @@ public interface ArticleQuery {
             ArticleContract.ArticleEntry.COLUMN_URL_TO_IMAGE,
             ArticleContract.ArticleEntry.COLUMN_URL,
             ArticleContract.ArticleEntry.COLUMN_PUBLISHED_AT,
-            ArticleContract.ArticleEntry.COLUMN_CATEGORY
+            ArticleContract.ArticleEntry.COLUMN_CATEGORY,
+            ArticleContract.ArticleEntry.COLUMN_SOURCE
     };
 
     int ID = 0;
@@ -21,4 +22,5 @@ public interface ArticleQuery {
     int URL = 5;
     int PUBLISHED_AT = 6;
     int CATEGORY = 7;
+    int SOURCE = 8;
 }

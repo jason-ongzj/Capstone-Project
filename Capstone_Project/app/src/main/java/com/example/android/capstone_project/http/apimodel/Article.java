@@ -27,6 +27,7 @@ public class Article implements Parcelable{
     @Expose
     private String publishedAt;
     private String category;
+    private String source;
 
     private Article(Parcel in){
         this.author = in.readString();
@@ -36,6 +37,7 @@ public class Article implements Parcelable{
         this.url = in.readString();
         this.publishedAt = in.readString();
         this.category = in.readString();
+        this.source = in.readString();
     }
 
     @Override
@@ -119,5 +121,13 @@ public class Article implements Parcelable{
 
     public String getCategory(){
         return this.category;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getSource() {
+        return this.source;
     }
 }

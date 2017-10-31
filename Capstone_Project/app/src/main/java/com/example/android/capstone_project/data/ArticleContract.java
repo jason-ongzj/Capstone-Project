@@ -31,5 +31,6 @@ public class ArticleContract{
         public static final String COLUMN_URL_TO_IMAGE = "UrlToImage";
         public static final String COLUMN_PUBLISHED_AT = "PublishedAt";
         public static final String COLUMN_CATEGORY = "Category";
+        public static final String COLUMN_SOURCE = "Source";
     }
 }

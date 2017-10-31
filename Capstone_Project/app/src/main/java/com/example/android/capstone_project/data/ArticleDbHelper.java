@@ -27,7 +27,8 @@ public class ArticleDbHelper extends SQLiteOpenHelper{
                         ArticleContract.ArticleEntry.COLUMN_URL_TO_IMAGE + " TEXT, " +
                         ArticleContract.ArticleEntry.COLUMN_URL + " TEXT NOT NULL, " +
                         ArticleContract.ArticleEntry.COLUMN_PUBLISHED_AT + " TEXT, " +
-                        ArticleContract.ArticleEntry.COLUMN_CATEGORY + " TEXT);";
+                        ArticleContract.ArticleEntry.COLUMN_CATEGORY + " TEXT, " +
+                        ArticleContract.ArticleEntry.COLUMN_SOURCE+ " TEXT);";
 
         final String SQL_CREATE_LATEST_ARTICLES_TABLE =
 
@@ -39,7 +40,9 @@ public class ArticleDbHelper extends SQLiteOpenHelper{
                         ArticleContract.ArticleEntry.COLUMN_URL_TO_IMAGE + " TEXT, " +
                         ArticleContract.ArticleEntry.COLUMN_URL + " TEXT NOT NULL, " +
                         ArticleContract.ArticleEntry.COLUMN_PUBLISHED_AT + " TEXT, " +
-                        ArticleContract.ArticleEntry.COLUMN_CATEGORY + " TEXT);";
+                        ArticleContract.ArticleEntry.COLUMN_CATEGORY + " TEXT, " +
+                        ArticleContract.ArticleEntry.COLUMN_SOURCE+ " TEXT);";
+
         sqLiteDatabase.execSQL(SQL_CREATE_TOP_ARTICLES_TABLE);
         sqLiteDatabase.execSQL(SQL_CREATE_LATEST_ARTICLES_TABLE);
     }

@@ -200,6 +200,7 @@ public class GetArticlesListService extends IntentService {
                         @Override
                         public void onNext(Article article) {
                             article.setCategory(source.getCategory());
+                            article.setSource(source.getName());
                             arrayArticle.add(article);
                         }
                     });

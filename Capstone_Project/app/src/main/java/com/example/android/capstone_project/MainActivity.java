@@ -23,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -38,16 +39,17 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.drawer_layout) DrawerLayout drawer;
     @BindView(R.id.nav_view) NavigationView navigationView;
     @BindView(R.id.tab_layout) TabLayout tabLayout;
+    @BindView(R.id.listView) ListView listView;
     @Nullable
     @BindView(R.id.spinner) Spinner spinner;
 
     private String[] spinnerItems = new String[] {"All", "Business", "Entertainment", "Gaming", "General",
-            "Music", "Politics", "Sport", "Technology"};
+            "Music", "Politics","Science-and-Nature", "Sport", "Technology"};
 
     private ViewPager mPager;
     private MyPagerAdapter mPagerAdapter;
-    private NavigationFragment navigationFragment;
     private Context mContext;
+    private Menu navMenu;
     public static final String TAG = "MainActivity";
 
     private String spinnerSelection = "all";
@@ -80,6 +82,7 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         navigationView.setNavigationItemSelectedListener(this);
+        navMenu = navigationView.getMenu();
 
         tabLayout.addTab(tabLayout.newTab().setText("Top"));
         tabLayout.addTab(tabLayout.newTab().setText("Latest"));
@@ -113,10 +116,10 @@ public class MainActivity extends AppCompatActivity
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
-                Toast.makeText(MainActivity.this, "The planet is " +
-                        adapterView.getItemAtPosition(pos).toString(), Toast.LENGTH_LONG).show();
                 if(itemSelected) {
                     spinnerSelection = adapterView.getItemAtPosition(pos).toString().toLowerCase();
+                    Toast.makeText(MainActivity.this, spinnerSelection, Toast.LENGTH_SHORT).show();
+
 
                     Fragment fragment_1 = mPagerAdapter.getRegisteredFragment(0);
                     Fragment fragment_2 = mPagerAdapter.getRegisteredFragment(1);
@@ -131,8 +134,28 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
+                if(itemSelected) {
+                    Fragment fragment_1 = mPagerAdapter.getRegisteredFragment(0);
+                    Fragment fragment_2 = mPagerAdapter.getRegisteredFragment(1);
+                    if (fragment_1 instanceof MainActivityFragment) {
+                        ((MainActivityFragment) fragment_1).restartLoader(ID_TOP_ARTICLES_LOADER, spinnerSelection);
+                    }
+                    if(fragment_2 instanceof MainActivityFragment) {
+                        ((MainActivityFragment) fragment_2).restartLoader(ID_LATEST_ARTICLES_LOADER, spinnerSelection);
+                    }
+                }
             }
         });
+    }
+
+    @Override
+    public Menu getMenu() {
+        return navMenu;
+    }
+
+    @Override
+    public ListView getListView() {
+        return listView;
     }
 
     public void setItemSelectedTrue(){
@@ -183,6 +206,11 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void closeDrawer() {
+        drawer.closeDrawer(GravityCompat.START);
+    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -205,13 +233,6 @@ public class MainActivity extends AppCompatActivity
 
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    @Override
-    public NavigationFragment getNavigationFragment() {
-        navigationFragment = (NavigationFragment) getFragmentManager()
-                .findFragmentById(R.id.fragment_nav_display);
-        return navigationFragment;
     }
 
     private class MyPagerAdapter extends FragmentStatePagerAdapter {
