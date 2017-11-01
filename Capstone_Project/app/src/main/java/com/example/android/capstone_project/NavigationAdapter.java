@@ -65,7 +65,6 @@ public class NavigationAdapter extends BaseAdapter {
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Toast.makeText(mContext, source, Toast.LENGTH_SHORT).show();
                 mClickHandler.onSourceItemClicked(source, category);
             }
         });

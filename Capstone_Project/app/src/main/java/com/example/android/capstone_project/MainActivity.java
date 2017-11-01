@@ -3,6 +3,7 @@ package com.example.android.capstone_project;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -53,10 +54,21 @@ public class MainActivity extends AppCompatActivity
     public static final String TAG = "MainActivity";
 
     private String spinnerSelection = "all";
+    private String source_item = "";
     private boolean itemSelected = false;
 
     private static final int ID_TOP_ARTICLES_LOADER = 156;
     private static final int ID_LATEST_ARTICLES_LOADER = 249;
+
+    private int SPINNER_BUSINESS = 1;
+    private int SPINNER_ENTERTAINMENT = 2;
+    private int SPINNER_GAMING = 3;
+    private int SPINNER_GENERAL = 4;
+    private int SPINNER_MUSIC = 5;
+    private int SPINNER_POLITICS = 6;
+    private int SPINNER_SCIENCE_NATURE = 7;
+    private int SPINNER_SPORT = 8;
+    private int SPINNER_TECHNOLOGY = 9;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -119,38 +131,76 @@ public class MainActivity extends AppCompatActivity
                 if(itemSelected) {
                     spinnerSelection = adapterView.getItemAtPosition(pos).toString().toLowerCase();
                     Toast.makeText(MainActivity.this, spinnerSelection, Toast.LENGTH_SHORT).show();
-
-
-                    Fragment fragment_1 = mPagerAdapter.getRegisteredFragment(0);
-                    Fragment fragment_2 = mPagerAdapter.getRegisteredFragment(1);
-                    if (fragment_1 instanceof MainActivityFragment) {
-                        ((MainActivityFragment) fragment_1).restartLoader(ID_TOP_ARTICLES_LOADER, spinnerSelection);
-                    }
-                    if(fragment_2 instanceof MainActivityFragment) {
-                        ((MainActivityFragment) fragment_2).restartLoader(ID_LATEST_ARTICLES_LOADER, spinnerSelection);
-                    }
+                    updateFragments(source_item);
+                    source_item = "";
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
-                if(itemSelected) {
-                    Fragment fragment_1 = mPagerAdapter.getRegisteredFragment(0);
-                    Fragment fragment_2 = mPagerAdapter.getRegisteredFragment(1);
-                    if (fragment_1 instanceof MainActivityFragment) {
-                        ((MainActivityFragment) fragment_1).restartLoader(ID_TOP_ARTICLES_LOADER, spinnerSelection);
-                    }
-                    if(fragment_2 instanceof MainActivityFragment) {
-                        ((MainActivityFragment) fragment_2).restartLoader(ID_LATEST_ARTICLES_LOADER, spinnerSelection);
-                    }
-                }
+                updateFragments(source_item);
             }
         });
     }
 
     @Override
-    public Menu getMenu() {
-        return navMenu;
+    public void onSourceItemClicked(String source, String category) {
+        source_item = source;
+        if(spinnerSelection.equals(category)){
+
+            // Fragment update cannot occur if category of selected source is same as shown in
+            // spinner item. Therefore, do a manual update.
+            updateFragments(source);
+            source_item = "";
+        } else {
+
+            // If source category is different from selected category from spinner, update via
+            // spinner itemSelected listener.
+            switch (category) {
+                case "business":
+                    spinner.setSelection(SPINNER_BUSINESS);
+                    break;
+                case "entertainment":
+                    spinner.setSelection(SPINNER_ENTERTAINMENT);
+                    break;
+                case "gaming":
+                    spinner.setSelection(SPINNER_GAMING);
+                    break;
+                case "general":
+                    spinner.setSelection(SPINNER_GENERAL);
+                    break;
+                case "music":
+                    spinner.setSelection(SPINNER_MUSIC);
+                    break;
+                case "politics":
+                    spinner.setSelection(SPINNER_POLITICS);
+                    break;
+                case "science-and-nature":
+                    spinner.setSelection(SPINNER_SCIENCE_NATURE);
+                    break;
+                case "sport":
+                    spinner.setSelection(SPINNER_SPORT);
+                    break;
+                case "technology":
+                    spinner.setSelection(SPINNER_TECHNOLOGY);
+                    break;
+            }
+        }
+        closeDrawer();
+    }
+
+    @Override
+    public void updateFragments(String source) {
+        Fragment fragment_1 = mPagerAdapter.getRegisteredFragment(0);
+        Fragment fragment_2 = mPagerAdapter.getRegisteredFragment(1);
+        if (fragment_1 instanceof MainActivityFragment) {
+            ((MainActivityFragment) fragment_1).setSource(source);
+            ((MainActivityFragment) fragment_1).restartLoader(ID_TOP_ARTICLES_LOADER, spinnerSelection);
+        }
+        if(fragment_2 instanceof MainActivityFragment) {
+            ((MainActivityFragment) fragment_2).setSource(source);
+            ((MainActivityFragment) fragment_2).restartLoader(ID_LATEST_ARTICLES_LOADER, spinnerSelection);
+        }
     }
 
     @Override
@@ -176,11 +226,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
     public void onBackPressed() {
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
@@ -191,7 +236,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.activity_main_menu, menu);
         return true;
     }
 
@@ -199,9 +244,14 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
-            return true;
+        if(id == R.id.search){
+            Intent intent = new Intent(this, SearchActivity.class);
+            startActivity(intent);
         }
+
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -214,28 +264,13 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
-
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
     private class MyPagerAdapter extends FragmentStatePagerAdapter {
+
+        // Register and store fragments for access later on
         private SparseArray<Fragment> registeredFragments = new SparseArray<>();
 
         int tabCount;

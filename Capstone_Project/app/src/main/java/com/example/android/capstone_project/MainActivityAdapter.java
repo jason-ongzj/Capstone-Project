@@ -14,8 +14,6 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.example.android.capstone_project.data.ArticleQuery;
 
-import java.util.ArrayList;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -25,7 +23,6 @@ public class MainActivityAdapter extends
 
     private Context mContext;
     private Cursor mCursor;
-    private ArrayList<String> sourceList;
 
     public void setContext(Context context) {
         mContext = context;
@@ -34,10 +31,6 @@ public class MainActivityAdapter extends
     public void setCursor(Cursor cursor){
         mCursor = cursor;
         notifyDataSetChanged();
-    }
-
-    public void setSourceList(ArrayList<String> list){
-        sourceList = list;
     }
 
     public class MainActivityAdapterViewHolder extends RecyclerView.ViewHolder{

@@ -37,15 +37,14 @@ public class GetArticlesListService extends IntentService {
 
     private List<Source> sourcesList;
 
-    private ArrayList<Article> topArticlesArray = new ArrayList<Article>();
-    private ArrayList<Article> latestArticlesArray = new ArrayList<Article>();
+    private ArrayList<Article> topArticlesArray = new ArrayList<>();
+    private ArrayList<Article> latestArticlesArray = new ArrayList<>();
 
     boolean topArticlesFetched = false;
     boolean latestArticlesFetched = false;
 
     private NewsAPI newsAPI;
     private static String api_Key = "4bea82e302ea46d188f106ffd0121590";
-    private static Context mContext;
 
     public GetArticlesListService() {
         super("GetIngredientsListService");
@@ -53,14 +52,12 @@ public class GetArticlesListService extends IntentService {
 
     public static void getTopArticles(Context context) {
         Intent intent = new Intent(context, GetArticlesListService.class);
-        mContext = context;
         intent.setAction(GET_TOP_ARTICLES);
         context.startService(intent);
     }
 
     public static void getLatestArticles(Context context) {
         Intent intent = new Intent(context, GetArticlesListService.class);
-        mContext = context;
         intent.setAction(GET_LATEST_ARTICLES);
         context.startService(intent);
     }
@@ -109,6 +106,7 @@ public class GetArticlesListService extends IntentService {
 
             @Override
             public void onNext(final Source source) {
+                // Go for top or latest, popular does not return any results
                 articleSourcesList.add(source.getName());
                 final ArrayList<Article> arrayArticle = new ArrayList<Article>();
                 switch (input) {
@@ -121,7 +119,6 @@ public class GetArticlesListService extends IntentService {
                         Log.d(TAG, "onNext: " + latestSourceIndex.get());
                         break;
                 }
-                // Go for top or latest, popular does not return any results
 
                 newsAPI.getArticlesObservable(source.getId(), input, api_Key)
                         .flatMap(new Func1<NewsAPIArticles, Observable<Article>>() {
@@ -138,8 +135,6 @@ public class GetArticlesListService extends IntentService {
                     .subscribe(new Observer<Article>() {
                         @Override
                         public void onCompleted() {
-//                            Log.d(TAG, "source name: " + source.getName());
-//                            articleSourceList.add(source.getName());
                             switch (input) {
                                 case "top":
 
@@ -154,11 +149,7 @@ public class GetArticlesListService extends IntentService {
                                     // a single broadcast is released, so that we can prevent double entries in the
                                     // database. This does not guarantee the capture of the major sources of data
 
-                                    Log.d(TAG, "onReceiveTop: " + Thread.activeCount());
                                     if (Thread.activeCount() <= 25 && !latestArticlesFetched) {
-                                        Log.d(TAG, "onCompletedTop: " + source.getId());
-//                                        Log.d(TAG, "onCompleted: " + sourcesList.get(sourcesList.size()-1).getName());
-//                                    if (topArticleID == sourcesSize) {
                                         // Set boolean to be true first so that the next thread(or next observer
                                         // subscribed on another thread will not be able to run the code below.
                                         // Else multiple broadcasts could result.
@@ -167,7 +158,7 @@ public class GetArticlesListService extends IntentService {
                                         Intent localIntent = new Intent(getString(R.string.get_top_articles));
                                         localIntent.putParcelableArrayListExtra("GET_TOP_ARTICLES", topArticlesArray);
                                         localIntent.putStringArrayListExtra("GET_TOP_ARTICLES_SOURCES", articleSourcesList);
-                                        LocalBroadcastManager.getInstance(mContext).sendBroadcast(localIntent);
+                                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(localIntent);
                                     }
                                     break;
 
@@ -176,18 +167,12 @@ public class GetArticlesListService extends IntentService {
                                     latestArticlesArray.addAll(arrayArticle);
 
                                     // Same as case for "top"
-
-//                                    Log.d(TAG, "onCompleted: latestArticlesStringArray" + latestArticlesInsertArray.size());
-//                                    Log.d(TAG, "onCompleted: latestArticlesArray " + latestArticlesArray.size());
-                                    Log.d(TAG, "onReceiveLatest: " + Thread.activeCount());
                                     if (Thread.activeCount() <= 25 && !latestArticlesFetched) {
-                                        Log.d(TAG, "onCompletedLatest: " + source.getId());
-                                        Log.d(TAG, "onCompleted: " + sourcesList.get(sourcesList.size()-1));
                                         latestArticlesFetched = true;
                                         Intent latestIntent = new Intent(getString(R.string.get_latest_articles));
                                         latestIntent.putParcelableArrayListExtra("GET_LATEST_ARTICLES", latestArticlesArray);
                                         latestIntent.putStringArrayListExtra("GET_LATEST_ARTICLES_SOURCES", articleSourcesList);
-                                        LocalBroadcastManager.getInstance(mContext).sendBroadcast(latestIntent);
+                                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(latestIntent);
                                     }
                                     break;
                             }
