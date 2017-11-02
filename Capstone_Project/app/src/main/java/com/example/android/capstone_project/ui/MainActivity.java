@@ -1,8 +1,7 @@
-package com.example.android.capstone_project;
+package com.example.android.capstone_project.ui;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -28,6 +27,8 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.example.android.capstone_project.R;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -49,9 +50,6 @@ public class MainActivity extends AppCompatActivity
 
     private ViewPager mPager;
     private MyPagerAdapter mPagerAdapter;
-    private Context mContext;
-    private Menu navMenu;
-    public static final String TAG = "MainActivity";
 
     private String spinnerSelection = "all";
     private String source_item = "";
@@ -86,15 +84,12 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        mContext = this;
-
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
         navigationView.setNavigationItemSelectedListener(this);
-        navMenu = navigationView.getMenu();
 
         tabLayout.addTab(tabLayout.newTab().setText("Top"));
         tabLayout.addTab(tabLayout.newTab().setText("Latest"));
@@ -122,7 +117,7 @@ public class MainActivity extends AppCompatActivity
         });
 
         final ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, spinnerItems);
+                android.R.layout.simple_list_item_activated_1, spinnerItems);
 
         spinner.setAdapter(spinnerAdapter);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -221,10 +216,6 @@ public class MainActivity extends AppCompatActivity
         return spinnerSelection;
     }
 
-    public Spinner getSpinner(){
-        return spinner;
-    }
-
     @Override
     public void onBackPressed() {
         if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -248,10 +239,6 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this, SearchActivity.class);
             startActivity(intent);
         }
-
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
 
         return super.onOptionsItemSelected(item);
     }

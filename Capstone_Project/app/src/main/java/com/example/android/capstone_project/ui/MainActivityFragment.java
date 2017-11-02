@@ -1,9 +1,8 @@
-package com.example.android.capstone_project;
+package com.example.android.capstone_project.ui;
 
 import android.app.Fragment;
 import android.app.LoaderManager;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
@@ -17,16 +16,17 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import android.widget.Spinner;
 
+import com.example.android.capstone_project.R;
 import com.example.android.capstone_project.data.ArticleContract;
 import com.example.android.capstone_project.data.ArticleDbHelper;
 import com.example.android.capstone_project.data.ArticleQuery;
+import com.example.android.capstone_project.data.DbUtils;
+import com.example.android.capstone_project.http.GetArticlesListService;
 import com.example.android.capstone_project.http.apimodel.Article;
 
 import java.util.ArrayList;
@@ -42,6 +42,7 @@ public class MainActivityFragment extends Fragment
 
     public final int TOP_ARTICLES = 0;
     public final int LATEST_ARTICLES = 1;
+    private int MAIN_ACTIVITY = 0;
     private final String TAG = "MainActivityFragment";
 
     private static final int ID_TOP_ARTICLES_LOADER = 156;
@@ -50,20 +51,18 @@ public class MainActivityFragment extends Fragment
     public ArrayList<String> articleSourcesList;
     private DataInterface mCallback;
 
-    private static String source_category;
     private static String source_item = "";
     private Cursor sourceCursor;
 
     private int category_id;
-    private MainActivityAdapter mAdapter;
+    private SearchArticlesAdapter mAdapter;
 
     boolean top_articles_loaded = false;
     boolean latest_articles_loaded = false;
 
     private ArticleDbHelper helper;
-    private SQLiteDatabase db;
-    private Spinner spinner;
     private String spinnerSelection = "all";
+    private DbUtils utils;
 
     private String[] spinnerItems = new String[] {"all", "business", "entertainment", "gaming", "general",
             "music", "politics", "science-and-nature", "sport", "technology"};
@@ -105,7 +104,7 @@ public class MainActivityFragment extends Fragment
         super.onCreate(savedInstanceState);
 
         helper = new ArticleDbHelper(getActivity());
-        db = helper.getWritableDatabase();
+        utils = new DbUtils(helper);
 
         if (getArguments() != null) {
             category_id = getArguments().getInt("Category_Id");
@@ -149,7 +148,6 @@ public class MainActivityFragment extends Fragment
         ButterKnife.bind(this, mRootView);
 
         if(getActivity() instanceof MainActivity){
-            spinner = ((MainActivity) getActivity()).getSpinner();
             spinnerSelection = ((MainActivity) getActivity()).getSpinnerSelection();
         }
 
@@ -259,8 +257,7 @@ public class MainActivityFragment extends Fragment
 
         source_item = "";
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-        mAdapter = new MainActivityAdapter();
-        mAdapter.setContext(getActivity());
+        mAdapter = new SearchArticlesAdapter(getActivity(), MAIN_ACTIVITY);
         mAdapter.setCursor(cursor);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(linearLayoutManager);
@@ -279,7 +276,7 @@ public class MainActivityFragment extends Fragment
         }
 
         if(articleSourcesList != null) {
-            sourceCursor = querySources();
+            sourceCursor = utils.querySources();
             NavigationAdapter navAdapter = new NavigationAdapter(getActivity(), this);
             navAdapter.setCursor(sourceCursor);
             listView.setAdapter(navAdapter);
@@ -290,21 +287,6 @@ public class MainActivityFragment extends Fragment
         source_item = source;
     }
 
-    private Cursor querySources(){
-        // Get unique entries of source names using UNION statement
-        String sql = "SELECT " + ArticleContract.ArticleEntry.COLUMN_SOURCE + ", "
-                    + ArticleContract.ArticleEntry.COLUMN_CATEGORY + " FROM "
-                    + ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE + " GROUP BY "
-                    + ArticleContract.ArticleEntry.COLUMN_SOURCE + " UNION "
-                    + "SELECT " + ArticleContract.ArticleEntry.COLUMN_SOURCE + ", "
-                    + ArticleContract.ArticleEntry.COLUMN_CATEGORY + " FROM "
-                    + ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE + " GROUP BY "
-                    + ArticleContract.ArticleEntry.COLUMN_SOURCE;
-        SQLiteDatabase sqlDb = helper.getReadableDatabase();
-        Cursor cursor = sqlDb.rawQuery(sql, null);
-        return cursor;
-    }
-
     public void startLoader(int loaderID){
         getLoaderManager().initLoader(loaderID, null, this);
     }
@@ -313,41 +295,6 @@ public class MainActivityFragment extends Fragment
         spinnerSelection = itemSelected;
         getLoaderManager().restartLoader(loaderID, null, this);
         mAdapter.notifyDataSetChanged();
-        Log.d(TAG, "restartLoader: updating" + category_id);
-    }
-
-    private void insertIntoDb(ArrayList<Article> array, String sortBy){
-        String table = "";
-        switch(sortBy){
-            case "top":
-                table = ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE;
-                helper.deleteRecordsFromTopTable(db);
-                break;
-            case "latest":
-                table = ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE;
-                helper.deleteRecordsFromLatestTable(db);
-                break;
-        }
-        db.beginTransaction();
-        for(int i = 0; i < array.size(); i++){
-            ContentValues cv = new ContentValues();
-            Article article = array.get(i);
-            if(article != null) {
-                cv.put(ArticleContract.ArticleEntry._ID, i);
-                cv.put(ArticleContract.ArticleEntry.COLUMN_AUTHOR, article.getAuthor());
-                cv.put(ArticleContract.ArticleEntry.COLUMN_TITLE, article.getTitle());
-                cv.put(ArticleContract.ArticleEntry.COLUMN_DESCRIPTION, article.getDescription());
-                cv.put(ArticleContract.ArticleEntry.COLUMN_URL_TO_IMAGE, article.getUrlToImage());
-                cv.put(ArticleContract.ArticleEntry.COLUMN_URL, article.getUrl());
-                cv.put(ArticleContract.ArticleEntry.COLUMN_PUBLISHED_AT, article.getPublishedAt());
-                cv.put(ArticleContract.ArticleEntry.COLUMN_CATEGORY, article.getCategory());
-                cv.put(ArticleContract.ArticleEntry.COLUMN_SOURCE, article.getSource());
-                db.insert(table, null, cv);
-            }
-        }
-        db.setTransactionSuccessful();
-        db.endTransaction();
-        Log.d(TAG, "insertIntoDb: completed");
     }
 
     private class MyResponseReceiver extends BroadcastReceiver {
@@ -358,7 +305,7 @@ public class MainActivityFragment extends Fragment
                     ArrayList<Article> s = intent.getParcelableArrayListExtra("GET_TOP_ARTICLES");
                     articleSourcesList = intent.getStringArrayListExtra("GET_TOP_ARTICLES_SOURCES");
                     if (s!=null) {
-                        insertIntoDb(s, "top");
+                        utils.insertIntoDb(s, "top");
                         updateNavAdapter();
                     }
                     if(!top_articles_loaded) {
@@ -370,7 +317,7 @@ public class MainActivityFragment extends Fragment
                     s = intent.getParcelableArrayListExtra("GET_LATEST_ARTICLES");
                     articleSourcesList = intent.getStringArrayListExtra("GET_LATEST_ARTICLES_SOURCES");
                     if (s!=null) {
-                        insertIntoDb(s, "latest");
+                        utils.insertIntoDb(s, "latest");
                         updateNavAdapter();
                     }
                     if(!latest_articles_loaded) {

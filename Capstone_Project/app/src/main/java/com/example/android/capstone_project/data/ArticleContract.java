@@ -11,6 +11,7 @@ public class ArticleContract{
 
     public static final String PATH_TOP_ARTICLES = "top_articles";
     public static final String PATH_LATEST_ARTICLES = "latest_articles";
+    public static final String PATH_SEARCH_ARTICLES = "search_articles";
 
     public static final class ArticleEntry implements BaseColumns {
 
@@ -24,7 +25,7 @@ public class ArticleContract{
 
         public static final String TOP_ARTICLE_TABLE = "top_articles";
         public static final String LATEST_ARTICLE_TABLE = "latest_articles";
-        public static final String COLUMN_AUTHOR = "author";
+        public static final String COLUMN_AUTHOR = "Author";
         public static final String COLUMN_TITLE = "Title";
         public static final String COLUMN_DESCRIPTION = "Description";
         public static final String COLUMN_URL = "Url";
@@ -33,4 +34,15 @@ public class ArticleContract{
         public static final String COLUMN_CATEGORY = "Category";
         public static final String COLUMN_SOURCE = "Source";
     }
+
+    public static final class SearchEntry implements BaseColumns {
+
+        public static final Uri SEARCH_URI = BASE_CONTENT_URI.buildUpon()
+                .appendPath(PATH_SEARCH_ARTICLES)
+                .build();
+
+        public static final String SEARCH_ARTICLE_TABLE = "search_articles";
+        public static final String COLUMN_SEARCH_ITEM = "SearchItem";
+    }
 }
+

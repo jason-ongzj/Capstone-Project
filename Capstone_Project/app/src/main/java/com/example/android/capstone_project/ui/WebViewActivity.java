@@ -1,9 +1,11 @@
-package com.example.android.capstone_project;
+package com.example.android.capstone_project.ui;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import com.example.android.capstone_project.R;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

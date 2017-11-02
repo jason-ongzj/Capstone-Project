@@ -43,8 +43,14 @@ public class ArticleDbHelper extends SQLiteOpenHelper{
                         ArticleContract.ArticleEntry.COLUMN_CATEGORY + " TEXT, " +
                         ArticleContract.ArticleEntry.COLUMN_SOURCE+ " TEXT);";
 
+        final String SQL_CREATE_SEARCH_ARTICLES_TABLE =
+
+                "CREATE TABLE " + ArticleContract.SearchEntry.SEARCH_ARTICLE_TABLE + " (" +
+                        ArticleContract.SearchEntry.COLUMN_SEARCH_ITEM + " TEXT);";
+
         sqLiteDatabase.execSQL(SQL_CREATE_TOP_ARTICLES_TABLE);
         sqLiteDatabase.execSQL(SQL_CREATE_LATEST_ARTICLES_TABLE);
+        sqLiteDatabase.execSQL(SQL_CREATE_SEARCH_ARTICLES_TABLE);
     }
 
     @Override
@@ -58,5 +64,9 @@ public class ArticleDbHelper extends SQLiteOpenHelper{
 
     public void deleteRecordsFromLatestTable(SQLiteDatabase sqLiteDatabase){
         sqLiteDatabase.execSQL("DELETE FROM " + ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE);
+    }
+
+    public void deleteRecordsFromSearchHistoryTable(SQLiteDatabase sqLiteDatabase){
+        sqLiteDatabase.execSQL("DELETE FROM " + ArticleContract.SearchEntry.SEARCH_ARTICLE_TABLE);
     }
 }

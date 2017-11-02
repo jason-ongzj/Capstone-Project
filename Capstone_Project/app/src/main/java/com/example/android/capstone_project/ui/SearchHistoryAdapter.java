@@ -1,4 +1,4 @@
-package com.example.android.capstone_project;
+package com.example.android.capstone_project.ui;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -9,25 +9,27 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import com.example.android.capstone_project.R;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class NavigationAdapter extends BaseAdapter {
+public class SearchHistoryAdapter extends BaseAdapter {
 
     private Cursor mCursor;
     private Context mContext;
 
     @Nullable
-    @BindView(R.id.nav_list_tv)
-    TextView navTv;
+    @BindView(R.id.search_history_item)
+    TextView historyItemTv;
 
     private final OnClickHandler mClickHandler;
 
     public interface OnClickHandler{
-        void onSourceItemClicked(String source, String category);
+        void onHistoryItemClicked(String history_item);
     }
 
-    public NavigationAdapter(Context context, OnClickHandler clickHandler){
+    public SearchHistoryAdapter(Context context, OnClickHandler clickHandler){
         mContext = context;
         mClickHandler = clickHandler;
     }
@@ -56,20 +58,17 @@ public class NavigationAdapter extends BaseAdapter {
     public View getView(int position, View view, ViewGroup viewGroup) {
         mCursor.moveToPosition(position);
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        view = inflater.inflate(R.layout.nav_list_item, null);
+        view = inflater.inflate(R.layout.search_list_item, null);
         ButterKnife.bind(this, view);
-        final String source = mCursor.getString(0);
-        final String category = mCursor.getString(1);
-        navTv.setText(source);
+        final String history_item = mCursor.getString(0);
+        historyItemTv.setText(history_item);
 
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mClickHandler.onSourceItemClicked(source, category);
+                mClickHandler.onHistoryItemClicked(history_item);
             }
         });
         return view;
     }
-
-
 }

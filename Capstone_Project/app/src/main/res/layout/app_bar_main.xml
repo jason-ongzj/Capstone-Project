@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.android.capstone_project.MainActivity">
+    tools:context="com.example.android.capstone_project.ui.MainActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -20,7 +20,7 @@
 
             <Spinner
                 android:id="@+id/spinner"
-                android:layout_width="150dp"
+                android:layout_width="220dp"
                 android:layout_height="match_parent">
             </Spinner>
 

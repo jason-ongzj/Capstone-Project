@@ -1,4 +1,4 @@
-package com.example.android.capstone_project;
+package com.example.android.capstone_project.ui;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,20 +12,29 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.android.capstone_project.R;
 import com.example.android.capstone_project.data.ArticleQuery;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivityAdapter extends
-        RecyclerView.Adapter<MainActivityAdapter.MainActivityAdapterViewHolder> {
+// Adapter class can be reused for MainActivity as well as SearchActivity
+
+public class SearchArticlesAdapter extends
+        RecyclerView.Adapter<SearchArticlesAdapter.SearchArticlesAdapterViewHolder> {
 
     private Context mContext;
     private Cursor mCursor;
 
-    public void setContext(Context context) {
+    private int MAIN_ACTIVITY = 0;
+    private int SEARCH_ACTIVITY = 1;
+
+    private int activity_id;
+
+    public SearchArticlesAdapter(Context context, int id){
         mContext = context;
+        activity_id = id;
     }
 
     public void setCursor(Cursor cursor){
@@ -33,7 +42,7 @@ public class MainActivityAdapter extends
         notifyDataSetChanged();
     }
 
-    public class MainActivityAdapterViewHolder extends RecyclerView.ViewHolder{
+    public class SearchArticlesAdapterViewHolder extends RecyclerView.ViewHolder{
 
         @Nullable
         @BindView(R.id.card_display)
@@ -48,7 +57,7 @@ public class MainActivityAdapter extends
         @BindView(R.id.card_display_image)
         ImageView imageView;
 
-        public MainActivityAdapterViewHolder(View view){
+        public SearchArticlesAdapterViewHolder(View view){
             super(view);
             ButterKnife.bind(this, view);
         }
@@ -57,27 +66,38 @@ public class MainActivityAdapter extends
         public void onClick(){
             Intent intent = new Intent(mContext, WebViewActivity.class);
             mCursor.moveToPosition(getAdapterPosition());
-            intent.putExtra("URL", mCursor.getString(ArticleQuery.URL));
+            String url = "";
+            if(activity_id == MAIN_ACTIVITY)
+                url = mCursor.getString(ArticleQuery.URL);
+            else
+                url = mCursor.getString(ArticleQuery.SEARCH_URL);
+            intent.putExtra("URL", url);
             mContext.startActivity(intent);
         }
     }
 
     @Override
-    public MainActivityAdapterViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public SearchArticlesAdapterViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(R.layout.item_display, parent, false);
-        return new MainActivityAdapterViewHolder(view);
+        return new SearchArticlesAdapterViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(MainActivityAdapterViewHolder holder, int position) {
-
+    public void onBindViewHolder(SearchArticlesAdapterViewHolder holder, int position) {
+        String urlToImage = "";
         if(mCursor != null) {
             mCursor.moveToPosition(position);
-            holder.titleTv.setText(mCursor.getString(ArticleQuery.TITLE));
-            holder.descriptionTv.setText(mCursor.getString(ArticleQuery.DESCRIPTION));
-            String urlToImage = mCursor.getString(ArticleQuery.URL_TO_IMAGE);
-            if(urlToImage == null || urlToImage.equals("")){
+            if(activity_id == MAIN_ACTIVITY) {
+                holder.titleTv.setText(mCursor.getString(ArticleQuery.TITLE));
+                holder.descriptionTv.setText(mCursor.getString(ArticleQuery.DESCRIPTION));
+                urlToImage = mCursor.getString(ArticleQuery.URL_TO_IMAGE);
+            } else {
+                holder.titleTv.setText(mCursor.getString(ArticleQuery.SEARCH_TITLE));
+                holder.descriptionTv.setText(mCursor.getString(ArticleQuery.SEARCH_DESCRIPTION));
+                urlToImage = mCursor.getString(ArticleQuery.SEARCH_URL_TO_IMAGE);
+            }
+            if (urlToImage == null || urlToImage.equals("")) {
                 holder.imageView.setMaxHeight(0);
             } else Glide.with(mContext).load(urlToImage).into(holder.imageView);
         }

@@ -1,4 +1,4 @@
-package com.example.android.capstone_project;
+package com.example.android.capstone_project.http;
 
 import android.app.IntentService;
 import android.content.Context;
@@ -7,7 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import com.example.android.capstone_project.http.NewsAPI;
+import com.example.android.capstone_project.R;
 import com.example.android.capstone_project.http.apimodel.Article;
 import com.example.android.capstone_project.http.apimodel.NewsAPIArticles;
 import com.example.android.capstone_project.http.apimodel.NewsAPISources;

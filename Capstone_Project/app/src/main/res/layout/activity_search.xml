@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.example.android.capstone_project.SearchActivity">
+    tools:context="com.example.android.capstone_project.ui.SearchActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/search_toolbar"
@@ -31,20 +31,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal">
+
                 <EditText
+                    android:id="@+id/editText"
                     android:layout_width="match_parent"
                     android:layout_height="30dp"
                     android:layout_marginBottom="13dp"
-                    android:layout_marginTop="13dp"
                     android:layout_marginEnd="13dp"
+                    android:layout_marginTop="13dp"
                     android:background="@color/cardview_dark_background"
+                    android:hint="Search articles"
+                    android:imeOptions="actionSearch|flagNavigatePrevious"
+                    android:cursorVisible="false"
+                    android:inputType="textNoSuggestions"
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp"
-                    android:textSize="16sp"
-                    android:inputType="text"
-                    android:hint="Search articles"
-                    android:id="@+id/editText"
-                    android:imeOptions="actionDone|flagNavigatePrevious"/>
+                    android:maxLines="1"
+                    android:textSize="16sp" />
 
                 <ImageView
                     android:id="@+id/deleteText"
@@ -52,16 +55,64 @@
                     android:layout_height="30dp"
                     android:layout_alignEnd="@+id/editText"
                     android:layout_alignTop="@+id/editText"
-                    android:visibility="invisible"
-                    android:src="@android:drawable/ic_delete" />
+                    android:src="@android:drawable/ic_delete"
+                    android:visibility="invisible" />
             </RelativeLayout>
 
         </LinearLayout>
 
     </android.support.v7.widget.Toolbar>
 
-    <android.support.v7.widget.RecyclerView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-    </android.support.v7.widget.RecyclerView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:elevation="8dp"
+            android:id="@+id/search_history"
+            android:background="@color/gray_alpha"
+            android:clickable="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:id="@+id/clear_history">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/grey"
+                    android:padding="10dp"
+                    android:src="@drawable/delete_history" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="@color/grey"
+                    android:paddingBottom="10dp"
+                    android:paddingStart="30dp"
+                    android:paddingTop="10dp"
+                    android:text="Clear search history"
+                    android:textSize="16sp"
+                    android:textColor="@color/darker_gray" />
+
+            </LinearLayout>
+
+            <ListView
+                android:id="@+id/search_listView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/search_recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </android.support.v7.widget.RecyclerView>
+
+    </FrameLayout>
 </LinearLayout>

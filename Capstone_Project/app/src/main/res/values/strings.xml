@@ -1,13 +1,10 @@
 <resources>
-    <string name="app_name">Capstone_Project</string>
+    <string name="app_name">API News Stand</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <string name="get_top_articles">GET_TOP_ARTICLES</string>
     <string name="get_latest_articles">GET_LATEST_ARTICLES</string>

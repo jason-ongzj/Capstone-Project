@@ -1,4 +1,4 @@
-package com.example.android.capstone_project;
+package com.example.android.capstone_project.ui;
 
 import android.widget.ListView;
 

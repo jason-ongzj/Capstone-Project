@@ -18,6 +18,8 @@ public class ArticleProvider extends ContentProvider {
     private static final int LATEST_ARTICLES = 200;
     private static final int LATEST_ARTICLES_WITH_ID = 201;
 
+    public static final int SEARCH_ARTICLES = 300;
+
     private ArticleDbHelper mArticleDbHelper;
     private static final UriMatcher sUriMatcher = buildUriMatcher();
 
@@ -26,10 +28,10 @@ public class ArticleProvider extends ContentProvider {
         final String authority = ArticleContract.CONTENT_AUTHORITY;
 
         matcher.addURI(authority, ArticleContract.PATH_TOP_ARTICLES, TOP_ARTICLES);
-        matcher.addURI(authority, ArticleContract.PATH_TOP_ARTICLES + "/#", TOP_ARTICLES_WITH_ID);
 
         matcher.addURI(authority, ArticleContract.PATH_LATEST_ARTICLES, LATEST_ARTICLES);
-        matcher.addURI(authority, ArticleContract.PATH_LATEST_ARTICLES + "/#", LATEST_ARTICLES_WITH_ID);
+
+        matcher.addURI(authority, ArticleContract.PATH_SEARCH_ARTICLES, SEARCH_ARTICLES);
 
         return matcher;
     }
@@ -61,6 +63,15 @@ public class ArticleProvider extends ContentProvider {
                 break;
             case LATEST_ARTICLES:
                 retCursor = db.query(ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder);
+                break;
+            case SEARCH_ARTICLES:
+                retCursor = db.query(ArticleContract.SearchEntry.SEARCH_ARTICLE_TABLE,
                         projection,
                         selection,
                         selectionArgs,
@@ -102,6 +113,14 @@ public class ArticleProvider extends ContentProvider {
                 id = db.insert(ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE, null, contentValues);
                 if(id > 0){
                     returnUri = ContentUris.withAppendedId(ArticleContract.ArticleEntry.LATEST_URI, id);
+                } else {
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                }
+                break;
+            case SEARCH_ARTICLES:
+                id = db.insert(ArticleContract.SearchEntry.SEARCH_ARTICLE_TABLE, null, contentValues);
+                if(id > 0){
+                    returnUri = ContentUris.withAppendedId(ArticleContract.SearchEntry.SEARCH_URI, id);
                 } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 }
