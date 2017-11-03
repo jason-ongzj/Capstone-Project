@@ -24,10 +24,6 @@ public class NewsAPIArticles {
         return status;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public String getSource() {
         return source;
     }
@@ -40,16 +36,8 @@ public class NewsAPIArticles {
         return sortBy;
     }
 
-    public void setSortBy(String sortBy) {
-        this.sortBy = sortBy;
-    }
-
     public List<Article> getArticles() {
         return articles;
-    }
-
-    public void setArticles(List<Article> articles) {
-        this.articles = articles;
     }
 
 }

@@ -16,6 +16,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +27,7 @@ import com.example.android.capstone_project.data.ArticleContract;
 import com.example.android.capstone_project.data.ArticleDbHelper;
 import com.example.android.capstone_project.data.ArticleQuery;
 import com.example.android.capstone_project.data.DbUtils;
-import com.example.android.capstone_project.http.GetArticlesListService;
+import com.example.android.capstone_project.http.GetArticlesListService2;
 import com.example.android.capstone_project.http.apimodel.Article;
 
 import java.util.ArrayList;
@@ -121,10 +122,10 @@ public class MainActivityFragment extends Fragment
 
             switch (category_id){
                 case TOP_ARTICLES:
-                    GetArticlesListService.getTopArticles(getActivity());
+                    GetArticlesListService2.getTopArticles(getActivity());
                     break;
                 case LATEST_ARTICLES:
-                    GetArticlesListService.getLatestArticles(getActivity());
+                    GetArticlesListService2.getLatestArticles(getActivity());
                     break;
             }
 
@@ -255,12 +256,12 @@ public class MainActivityFragment extends Fragment
         if(getActivity() instanceof MainActivity)
             ((MainActivity) getActivity()).setItemSelectedTrue();
 
-        source_item = "";
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-        mAdapter = new SearchArticlesAdapter(getActivity(), MAIN_ACTIVITY);
-        mAdapter.setCursor(cursor);
-        mRecyclerView.setAdapter(mAdapter);
-        mRecyclerView.setLayoutManager(linearLayoutManager);
+            source_item = "";
+            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+            mAdapter = new SearchArticlesAdapter(getActivity(), MAIN_ACTIVITY);
+            mAdapter.setCursor(cursor);
+            mRecyclerView.setAdapter(mAdapter);
+            mRecyclerView.setLayoutManager(linearLayoutManager);
     }
 
     @Override
@@ -275,12 +276,11 @@ public class MainActivityFragment extends Fragment
             sourceCursor.close();
         }
 
-        if(articleSourcesList != null) {
-            sourceCursor = utils.querySources();
-            NavigationAdapter navAdapter = new NavigationAdapter(getActivity(), this);
-            navAdapter.setCursor(sourceCursor);
-            listView.setAdapter(navAdapter);
-        }
+        sourceCursor = utils.querySources();
+        NavigationAdapter navAdapter = new NavigationAdapter(getActivity(), this);
+        navAdapter.setCursor(sourceCursor);
+        Log.d(TAG, "updateNavAdapter: " + sourceCursor.getCount());
+        listView.setAdapter(navAdapter);
     }
 
     public void setSource(String source){
@@ -303,26 +303,26 @@ public class MainActivityFragment extends Fragment
             switch(category_id){
                 case TOP_ARTICLES:
                     ArrayList<Article> s = intent.getParcelableArrayListExtra("GET_TOP_ARTICLES");
-                    articleSourcesList = intent.getStringArrayListExtra("GET_TOP_ARTICLES_SOURCES");
-                    if (s!=null) {
+                    if(s!=null) {
+                        Log.d(TAG, "onReceive: " + s.size());
                         utils.insertIntoDb(s, "top");
+                        if (!top_articles_loaded) {
+                            startLoader(ID_TOP_ARTICLES_LOADER);
+                            top_articles_loaded = true;
+                        }
                         updateNavAdapter();
-                    }
-                    if(!top_articles_loaded) {
-                        startLoader(ID_TOP_ARTICLES_LOADER);
-                        top_articles_loaded = true;
                     }
                     break;
                 case LATEST_ARTICLES:
                     s = intent.getParcelableArrayListExtra("GET_LATEST_ARTICLES");
-                    articleSourcesList = intent.getStringArrayListExtra("GET_LATEST_ARTICLES_SOURCES");
-                    if (s!=null) {
+                    if(s!= null){
+                    Log.d(TAG, "onReceive: " + s.size());
                         utils.insertIntoDb(s, "latest");
+                        if(!latest_articles_loaded) {
+                            startLoader(ID_LATEST_ARTICLES_LOADER);
+                            latest_articles_loaded = true;
+                        }
                         updateNavAdapter();
-                    }
-                    if(!latest_articles_loaded) {
-                        startLoader(ID_LATEST_ARTICLES_LOADER);
-                        latest_articles_loaded = true;
                     }
                     break;
             }

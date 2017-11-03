@@ -37,11 +37,13 @@ public class GetArticlesListService extends IntentService {
 
     private List<Source> sourcesList;
 
-    private ArrayList<Article> topArticlesArray = new ArrayList<>();
-    private ArrayList<Article> latestArticlesArray = new ArrayList<>();
+    private final ArrayList<Article> topArticlesArray = new ArrayList<>();
+    private final ArrayList<Article> latestArticlesArray = new ArrayList<>();
 
     boolean topArticlesFetched = false;
     boolean latestArticlesFetched = false;
+
+    private static Context mContext;
 
     private NewsAPI newsAPI;
     private static String api_Key = "4bea82e302ea46d188f106ffd0121590";
@@ -53,6 +55,7 @@ public class GetArticlesListService extends IntentService {
     public static void getTopArticles(Context context) {
         Intent intent = new Intent(context, GetArticlesListService.class);
         intent.setAction(GET_TOP_ARTICLES);
+        mContext = context;
         context.startService(intent);
     }
 
@@ -96,7 +99,6 @@ public class GetArticlesListService extends IntentService {
                 .subscribeOn(Schedulers.newThread()).subscribe(new Observer<Source>() {
             @Override
             public void onCompleted() {
-
             }
 
             @Override
@@ -142,14 +144,11 @@ public class GetArticlesListService extends IntentService {
                                     // single transaction in the database through execSQL.
 
                                     topArticlesArray.addAll(arrayArticle);
+                                    Log.d(TAG, "onCompleted: top inner" + topArticlesArray.size());
 
-                                    // Use thread count as an estimate the completion of the observable, since
-                                    // RxJava 2 does not have defer function. Thread active count is merely an
-                                    // estimate of how close the observable is to completion. We need to ensure only
-                                    // a single broadcast is released, so that we can prevent double entries in the
-                                    // database. This does not guarantee the capture of the major sources of data
+                                    // Use thread count as an estimate the completion of the observable.
 
-                                    if (Thread.activeCount() <= 25 && !latestArticlesFetched) {
+                                    if (Thread.activeCount() <= 10 && !topArticlesFetched) {
                                         // Set boolean to be true first so that the next thread(or next observer
                                         // subscribed on another thread will not be able to run the code below.
                                         // Else multiple broadcasts could result.
@@ -165,9 +164,10 @@ public class GetArticlesListService extends IntentService {
                                 case "latest":
 
                                     latestArticlesArray.addAll(arrayArticle);
+                                    Log.d(TAG, "onCompleted: latest inner" + latestArticlesArray.size());
 
                                     // Same as case for "top"
-                                    if (Thread.activeCount() <= 25 && !latestArticlesFetched) {
+                                    if (Thread.activeCount() <= 10 && !latestArticlesFetched) {
                                         latestArticlesFetched = true;
                                         Intent latestIntent = new Intent(getString(R.string.get_latest_articles));
                                         latestIntent.putParcelableArrayListExtra("GET_LATEST_ARTICLES", latestArticlesArray);

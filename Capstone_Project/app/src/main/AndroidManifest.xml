@@ -29,7 +29,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".http.GetArticlesListService" />
+        <service android:name=".http.GetArticlesListService2" />
 
         <activity
             android:name=".ui.WebViewActivity"
