@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -28,6 +29,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.android.capstone_project.R;
+import com.example.android.capstone_project.http.GetArticlesIdlingResource;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -54,6 +56,9 @@ public class MainActivity extends AppCompatActivity
     private String spinnerSelection = "all";
     private String source_item = "";
     private boolean itemSelected = false;
+    private boolean syncFinished = false;
+
+    private GetArticlesIdlingResource mIdlingResource;
 
     private static final int ID_TOP_ARTICLES_LOADER = 156;
     private static final int ID_LATEST_ARTICLES_LOADER = 249;
@@ -67,6 +72,14 @@ public class MainActivity extends AppCompatActivity
     private int SPINNER_SCIENCE_NATURE = 7;
     private int SPINNER_SPORT = 8;
     private int SPINNER_TECHNOLOGY = 9;
+
+    @NonNull
+    public GetArticlesIdlingResource getIdleResource(){
+        if (mIdlingResource == null) {
+            mIdlingResource = new GetArticlesIdlingResource(this);
+        }
+        return mIdlingResource;
+    }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -203,6 +216,8 @@ public class MainActivity extends AppCompatActivity
         return listView;
     }
 
+    // To only allow activation spinner listener on selection, so that listener is not called after
+    // loading
     public void setItemSelectedTrue(){
         itemSelected = true;
     }
@@ -251,8 +266,16 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        drawer.closeDrawer(GravityCompat.START);
+        closeDrawer();
         return true;
+    }
+
+    public void setSyncFinished(){
+        syncFinished = true;
+    }
+
+    public boolean isSyncFinished(){
+        return syncFinished;
     }
 
     private class MyPagerAdapter extends FragmentStatePagerAdapter {

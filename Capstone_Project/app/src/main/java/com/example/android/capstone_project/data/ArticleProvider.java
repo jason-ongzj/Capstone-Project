@@ -13,10 +13,8 @@ import android.support.annotation.Nullable;
 public class ArticleProvider extends ContentProvider {
 
     private static final int TOP_ARTICLES = 100;
-    private static final int TOP_ARTICLES_WITH_ID = 101;
 
     private static final int LATEST_ARTICLES = 200;
-    private static final int LATEST_ARTICLES_WITH_ID = 201;
 
     public static final int SEARCH_ARTICLES = 300;
 

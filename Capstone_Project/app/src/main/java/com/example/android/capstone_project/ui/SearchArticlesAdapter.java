@@ -3,7 +3,6 @@ package com.example.android.capstone_project.ui;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,6 +29,8 @@ public class SearchArticlesAdapter extends
     private int MAIN_ACTIVITY = 0;
     private int SEARCH_ACTIVITY = 1;
 
+    private int WIDGET_PROVIDER = 100;
+
     private int activity_id;
 
     public SearchArticlesAdapter(Context context, int id){
@@ -44,16 +45,12 @@ public class SearchArticlesAdapter extends
 
     public class SearchArticlesAdapterViewHolder extends RecyclerView.ViewHolder{
 
-        @Nullable
         @BindView(R.id.card_display)
         View card_display;
-        @Nullable
         @BindView(R.id.card_display_title)
         TextView titleTv;
-        @Nullable
         @BindView(R.id.card_display_description)
         TextView descriptionTv;
-        @Nullable
         @BindView(R.id.card_display_image)
         ImageView imageView;
 

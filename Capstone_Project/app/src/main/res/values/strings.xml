@@ -8,4 +8,7 @@
 
     <string name="get_top_articles">GET_TOP_ARTICLES</string>
     <string name="get_latest_articles">GET_LATEST_ARTICLES</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="configure">Configure</string>
+    <string name="add_widget">Add widget</string>
 </resources>

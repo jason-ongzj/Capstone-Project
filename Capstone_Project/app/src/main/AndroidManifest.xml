@@ -3,6 +3,7 @@
     package="com.example.android.capstone_project">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application
         android:allowBackup="true"
@@ -29,16 +30,32 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".http.GetArticlesListService2" />
+        <service android:name=".http.GetArticlesListService" />
 
-        <activity
-            android:name=".ui.WebViewActivity"
-            android:parentActivityName=".ui.MainActivity" />
+        <activity android:name=".ui.WebViewActivity" />
         <activity
             android:name=".ui.SearchActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
             android:parentActivityName=".ui.MainActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
+        <receiver android:name=".ui.widget.ApiNewsStandWidget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/api_news_stand_widget_info" />
+        </receiver>
+
+        <activity android:name=".ui.widget.ApiNewsStandWidgetConfigureActivity">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <service android:name=".ui.widget.WidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"/>
     </application>
 
 </manifest>

@@ -27,7 +27,7 @@ import com.example.android.capstone_project.data.ArticleContract;
 import com.example.android.capstone_project.data.ArticleDbHelper;
 import com.example.android.capstone_project.data.ArticleQuery;
 import com.example.android.capstone_project.data.DbUtils;
-import com.example.android.capstone_project.http.GetArticlesListService2;
+import com.example.android.capstone_project.http.GetArticlesListService;
 import com.example.android.capstone_project.http.apimodel.Article;
 
 import java.util.ArrayList;
@@ -49,7 +49,6 @@ public class MainActivityFragment extends Fragment
     private static final int ID_TOP_ARTICLES_LOADER = 156;
     private static final int ID_LATEST_ARTICLES_LOADER = 249;
 
-    public ArrayList<String> articleSourcesList;
     private DataInterface mCallback;
 
     private static String source_item = "";
@@ -57,6 +56,9 @@ public class MainActivityFragment extends Fragment
 
     private int category_id;
     private SearchArticlesAdapter mAdapter;
+
+
+    private MyResponseReceiver responseReceiver;
 
     boolean top_articles_loaded = false;
     boolean latest_articles_loaded = false;
@@ -114,7 +116,7 @@ public class MainActivityFragment extends Fragment
         if (savedInstanceState == null) {
 
             IntentFilter topArticlesIntentFilter = new IntentFilter(getString(R.string.get_top_articles));
-            MyResponseReceiver responseReceiver = new MyResponseReceiver();
+            responseReceiver = new MyResponseReceiver();
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(responseReceiver, topArticlesIntentFilter);
 
             IntentFilter latestArticlesIntentFilter = new IntentFilter(getString(R.string.get_latest_articles));
@@ -122,10 +124,10 @@ public class MainActivityFragment extends Fragment
 
             switch (category_id){
                 case TOP_ARTICLES:
-                    GetArticlesListService2.getTopArticles(getActivity());
+                    GetArticlesListService.getTopArticles(getActivity());
                     break;
                 case LATEST_ARTICLES:
-                    GetArticlesListService2.getLatestArticles(getActivity());
+                    GetArticlesListService.getLatestArticles(getActivity());
                     break;
             }
 
@@ -253,15 +255,19 @@ public class MainActivityFragment extends Fragment
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        if(getActivity() instanceof MainActivity)
+        if(getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).setItemSelectedTrue();
+            ((MainActivity) getActivity()).setSyncFinished();
+        }
 
-            source_item = "";
-            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-            mAdapter = new SearchArticlesAdapter(getActivity(), MAIN_ACTIVITY);
-            mAdapter.setCursor(cursor);
-            mRecyclerView.setAdapter(mAdapter);
-            mRecyclerView.setLayoutManager(linearLayoutManager);
+        source_item = "";
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+        mAdapter = new SearchArticlesAdapter(getActivity(), MAIN_ACTIVITY);
+        mAdapter.setCursor(cursor);
+        mRecyclerView.setAdapter(mAdapter);
+        mRecyclerView.setLayoutManager(linearLayoutManager);
+
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(responseReceiver);
     }
 
     @Override

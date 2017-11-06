@@ -89,4 +89,9 @@ public class DbUtils {
         Cursor cursor = db.rawQuery(sql, null);
         return cursor;
     }
+
+    public Cursor queryTopArticles(){
+        return db.query(ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE, ArticleQuery.PROJECTION,
+                null, null, null, null, null);
+    }
 }

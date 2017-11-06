@@ -9,13 +9,11 @@ import android.util.Log;
 
 import com.example.android.capstone_project.R;
 import com.example.android.capstone_project.http.apimodel.Article;
-import com.example.android.capstone_project.http.apimodel.NewsAPIArticles;
 import com.example.android.capstone_project.http.apimodel.NewsAPISources;
 import com.example.android.capstone_project.http.apimodel.Source;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
@@ -32,21 +30,15 @@ public class GetArticlesListService extends IntentService {
     private static final String GET_TOP_ARTICLES = "GetTopArticles";
     private static final String GET_LATEST_ARTICLES = "GetLatestArticles";
 
-    private AtomicInteger topSourceIndex = new AtomicInteger(0);
-    private AtomicInteger latestSourceIndex = new AtomicInteger(0);
-
     private List<Source> sourcesList;
 
-    private final ArrayList<Article> topArticlesArray = new ArrayList<>();
-    private final ArrayList<Article> latestArticlesArray = new ArrayList<>();
-
-    boolean topArticlesFetched = false;
-    boolean latestArticlesFetched = false;
-
-    private static Context mContext;
+    private ArrayList<Article> topArticlesArray = new ArrayList<>();
+    private ArrayList<Article> latestArticlesArray = new ArrayList<>();
 
     private NewsAPI newsAPI;
     private static String api_Key = "4bea82e302ea46d188f106ffd0121590";
+
+    private int count = 0;
 
     public GetArticlesListService() {
         super("GetIngredientsListService");
@@ -55,7 +47,6 @@ public class GetArticlesListService extends IntentService {
     public static void getTopArticles(Context context) {
         Intent intent = new Intent(context, GetArticlesListService.class);
         intent.setAction(GET_TOP_ARTICLES);
-        mContext = context;
         context.startService(intent);
     }
 
@@ -87,109 +78,86 @@ public class GetArticlesListService extends IntentService {
     }
 
     private void getArticles(final String input) {
-        final ArrayList<String> articleSourcesList = new ArrayList<String>();
+
         newsAPI.getSourcesObservable("", "en")
-                .flatMap(new Func1<NewsAPISources, Observable<Source>>() {
-                    @Override
-                    public Observable<Source> call(NewsAPISources newsAPISources) {
-                        sourcesList = newsAPISources.getSources();
-                        return Observable.from(sourcesList);
-                    }
-                })
-                .subscribeOn(Schedulers.newThread()).subscribe(new Observer<Source>() {
-            @Override
-            public void onCompleted() {
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onNext(final Source source) {
-                // Go for top or latest, popular does not return any results
-                articleSourcesList.add(source.getName());
-                final ArrayList<Article> arrayArticle = new ArrayList<Article>();
-                switch (input) {
-                    case "top":
-                        topSourceIndex.getAndIncrement();
-                        Log.d(TAG, "onNext: " + topSourceIndex.get());
-                        break;
-                    case "latest":
-                        latestSourceIndex.getAndIncrement();
-                        Log.d(TAG, "onNext: " + latestSourceIndex.get());
-                        break;
+            .flatMap(new Func1<NewsAPISources, Observable<Source>>() {
+                @Override
+                public Observable<Source> call(NewsAPISources newsAPISources) {
+                    sourcesList = newsAPISources.getSources();
+                    Log.d(TAG, "call: " + sourcesList.size());
+                    return Observable.from(sourcesList);
                 }
+            }).flatMap(source ->
+            Observable.defer(() -> {
+                try {
+                    Log.d(TAG, "getArticles: " + source.getId());
+                    return newsAPI.getArticlesObservable(source.getId(), input, api_Key)
+                            .flatMap(newsAPIArticles ->
+                                    Observable.from(newsAPIArticles.getArticles())
+                            )
+                            .filter(article ->
+                                !article.getUrl().equals("")
+                            )
+                            .filter(article ->
+                                !article.getDescription().equals("")
+                            )
+                            .filter(article ->
+                                !article.getUrlToImage().equals("")
+                            )
+                            .map(article -> {
+                                try {
+                                    article.setCategory(source.getCategory());
+                                    article.setSource(source.getName());
+                                    addArticlesToArray(input, article);
+                                    return article;
+                                } catch (Exception e){
+                                    return null;
+                                }
+                            });
+                } catch (Exception e){
+                    e.printStackTrace();
+                    return null;
+                }
+            }).subscribeOn(Schedulers.newThread()).onErrorResumeNext(Observable.empty()))
+            .subscribe(
 
-                newsAPI.getArticlesObservable(source.getId(), input, api_Key)
-                        .flatMap(new Func1<NewsAPIArticles, Observable<Article>>() {
-                            @Override
-                            public Observable<Article> call(NewsAPIArticles newsAPIArticles) {
-                                return Observable.from(newsAPIArticles.getArticles());
-                            }
-                        }).filter(new Func1<Article, Boolean>() {
+                new Observer<Article>() {
                     @Override
-                    public Boolean call(Article article) {
-                        return !article.getDescription().equals("");
+                    public void onCompleted() {
+                        count++;
+                        // 2 intent service tasks running, we only to broadcast once
+                        if(count == 2) {
+                            Log.d(TAG, "onCompleted: top" + topArticlesArray.size());
+                            Log.d(TAG, "onCompleted: latest" + latestArticlesArray.size());
+                            Intent localIntent = new Intent(getString(R.string.get_top_articles));
+                            localIntent.putParcelableArrayListExtra("GET_TOP_ARTICLES", topArticlesArray);
+                            localIntent.putParcelableArrayListExtra("GET_LATEST_ARTICLES", latestArticlesArray);
+                            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(localIntent);
+                            count = 0;
+                        }
                     }
-                }).subscribeOn(Schedulers.newThread())
-                    .subscribe(new Observer<Article>() {
-                        @Override
-                        public void onCompleted() {
-                            switch (input) {
-                                case "top":
 
-                                    // Add all insertions into a single arraylist, to be parsed in a
-                                    // single transaction in the database through execSQL.
+                    @Override
+                    public void onError(Throwable e) {
+                    }
 
-                                    topArticlesArray.addAll(arrayArticle);
-                                    Log.d(TAG, "onCompleted: top inner" + topArticlesArray.size());
-
-                                    // Use thread count as an estimate the completion of the observable.
-
-                                    if (Thread.activeCount() <= 10 && !topArticlesFetched) {
-                                        // Set boolean to be true first so that the next thread(or next observer
-                                        // subscribed on another thread will not be able to run the code below.
-                                        // Else multiple broadcasts could result.
-
-                                        topArticlesFetched = true;
-                                        Intent localIntent = new Intent(getString(R.string.get_top_articles));
-                                        localIntent.putParcelableArrayListExtra("GET_TOP_ARTICLES", topArticlesArray);
-                                        localIntent.putStringArrayListExtra("GET_TOP_ARTICLES_SOURCES", articleSourcesList);
-                                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(localIntent);
-                                    }
-                                    break;
-
-                                case "latest":
-
-                                    latestArticlesArray.addAll(arrayArticle);
-                                    Log.d(TAG, "onCompleted: latest inner" + latestArticlesArray.size());
-
-                                    // Same as case for "top"
-                                    if (Thread.activeCount() <= 10 && !latestArticlesFetched) {
-                                        latestArticlesFetched = true;
-                                        Intent latestIntent = new Intent(getString(R.string.get_latest_articles));
-                                        latestIntent.putParcelableArrayListExtra("GET_LATEST_ARTICLES", latestArticlesArray);
-                                        latestIntent.putStringArrayListExtra("GET_LATEST_ARTICLES_SOURCES", articleSourcesList);
-                                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(latestIntent);
-                                    }
-                                    break;
-                            }
-                        }
-
-                        @Override
-                        public void onError(Throwable e) {
-                        }
-
-                        @Override
-                        public void onNext(Article article) {
-                            article.setCategory(source.getCategory());
-                            article.setSource(source.getName());
-                            arrayArticle.add(article);
-                        }
-                    });
-            }
-        });
+                    @Override
+                    public void onNext(Article article) {
+                    }
+                }
+            );
     }
+
+    private ArrayList<Article> addArticlesToArray(String input, Article article){
+        switch(input){
+            case "top":
+                topArticlesArray.add(article);
+                return topArticlesArray;
+            case "latest":
+                latestArticlesArray.add(article);
+                return latestArticlesArray;
+        }
+        return null;
+    }
+
 }
