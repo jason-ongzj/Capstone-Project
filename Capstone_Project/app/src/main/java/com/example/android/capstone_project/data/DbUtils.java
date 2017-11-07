@@ -72,7 +72,8 @@ public class DbUtils {
     }
 
     public Cursor queryCombinedArticleLists(String query){
-        // Get combined entries from top and latest articles tables
+        // Get combined entries from top and latest articles tables for search on particular term
+        // or phrase, querying only the description or title fields
         String output = ArticleContract.ArticleEntry.COLUMN_TITLE + ", "
                 + ArticleContract.ArticleEntry.COLUMN_DESCRIPTION + ", "
                 + ArticleContract.ArticleEntry.COLUMN_URL_TO_IMAGE + ", "
@@ -88,10 +89,5 @@ public class DbUtils {
                 + whereClause;
         Cursor cursor = db.rawQuery(sql, null);
         return cursor;
-    }
-
-    public Cursor queryTopArticles(){
-        return db.query(ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE, ArticleQuery.PROJECTION,
-                null, null, null, null, null);
     }
 }

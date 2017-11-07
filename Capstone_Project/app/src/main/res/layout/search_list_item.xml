@@ -8,6 +8,7 @@
         android:layout_width="40dp"
         android:layout_height="match_parent"
         android:background="@color/textBackground"
+        android:contentDescription="@string/image"
         android:padding="10dp"
         android:src="@drawable/history_icon" />
 
@@ -19,7 +20,7 @@
         android:paddingBottom="10dp"
         android:paddingStart="30dp"
         android:paddingTop="10dp"
-        android:text="asdf"
+        android:text="@string/placeholder_string"
         android:textColor="@color/cardview_dark_background"
         android:textSize="16sp" />
 

@@ -39,8 +39,6 @@ public class MainActivityFragment extends Fragment
     implements LoaderManager.LoaderCallbacks<Cursor>,
     NavigationAdapter.OnClickHandler{
 
-
-
     public final int TOP_ARTICLES = 0;
     public final int LATEST_ARTICLES = 1;
     private int MAIN_ACTIVITY = 0;
@@ -52,16 +50,14 @@ public class MainActivityFragment extends Fragment
     private DataInterface mCallback;
 
     private static String source_item = "";
+    private static String current_source;
+
     private Cursor sourceCursor;
 
     private int category_id;
     private SearchArticlesAdapter mAdapter;
 
-
     private MyResponseReceiver responseReceiver;
-
-    boolean top_articles_loaded = false;
-    boolean latest_articles_loaded = false;
 
     private ArticleDbHelper helper;
     private String spinnerSelection = "all";
@@ -80,6 +76,7 @@ public class MainActivityFragment extends Fragment
     public static MainActivityFragment newInstance(int id) {
         MainActivityFragment fragment = new MainActivityFragment();
         Bundle args = new Bundle();
+        fragment.setRetainInstance(true);
         args.putInt("Category_Id", id);
         fragment.setArguments(args);
         return fragment;
@@ -122,7 +119,7 @@ public class MainActivityFragment extends Fragment
             IntentFilter latestArticlesIntentFilter = new IntentFilter(getString(R.string.get_latest_articles));
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(responseReceiver, latestArticlesIntentFilter);
 
-            switch (category_id){
+            switch (category_id) {
                 case TOP_ARTICLES:
                     GetArticlesListService.getTopArticles(getActivity());
                     break;
@@ -131,9 +128,19 @@ public class MainActivityFragment extends Fragment
                     break;
             }
 
-        } else {
+        }
+    }
 
-            switch(category_id){
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if(savedInstanceState!= null) {
+            category_id = savedInstanceState.getInt("CategoryId");
+            source_item = savedInstanceState.getString("CurrentSource");
+
+            Log.d(TAG, "onActivityCreated: " + source_item);
+
+            switch (category_id) {
                 case TOP_ARTICLES:
                     getLoaderManager().initLoader(ID_TOP_ARTICLES_LOADER, null, this);
                     break;
@@ -142,6 +149,13 @@ public class MainActivityFragment extends Fragment
                     break;
             }
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt("CategoryId", category_id);
+        outState.putString("CurrentSource", current_source);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -255,12 +269,24 @@ public class MainActivityFragment extends Fragment
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        updateNavAdapter();
         if(getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).setItemSelectedTrue();
+
+            // Used for testing purposes
             ((MainActivity) getActivity()).setSyncFinished();
         }
 
+        // Save current source for config reset. "if" condition is required since there are two
+        // fragments tracking a single variable, else current_source will be "".
+        if(!source_item.equals("")) {
+            current_source = source_item;
+        }
+
+        // Reset source_item variable after every search, otherwise subsequent searches are limited
+        // in scope
         source_item = "";
+
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         mAdapter = new SearchArticlesAdapter(getActivity(), MAIN_ACTIVITY);
         mAdapter.setCursor(cursor);
@@ -293,10 +319,12 @@ public class MainActivityFragment extends Fragment
         source_item = source;
     }
 
+    // Accessed from broadcast receiver
     public void startLoader(int loaderID){
         getLoaderManager().initLoader(loaderID, null, this);
     }
 
+    // Accessed from MainActivity to reload when spinner selection changes
     public void restartLoader(int loaderID, String itemSelected){
         spinnerSelection = itemSelected;
         getLoaderManager().restartLoader(loaderID, null, this);
@@ -312,11 +340,7 @@ public class MainActivityFragment extends Fragment
                     if(s!=null) {
                         Log.d(TAG, "onReceive: " + s.size());
                         utils.insertIntoDb(s, "top");
-                        if (!top_articles_loaded) {
-                            startLoader(ID_TOP_ARTICLES_LOADER);
-                            top_articles_loaded = true;
-                        }
-                        updateNavAdapter();
+                        startLoader(ID_TOP_ARTICLES_LOADER);
                     }
                     break;
                 case LATEST_ARTICLES:
@@ -324,11 +348,7 @@ public class MainActivityFragment extends Fragment
                     if(s!= null){
                     Log.d(TAG, "onReceive: " + s.size());
                         utils.insertIntoDb(s, "latest");
-                        if(!latest_articles_loaded) {
-                            startLoader(ID_LATEST_ARTICLES_LOADER);
-                            latest_articles_loaded = true;
-                        }
-                        updateNavAdapter();
+                        startLoader(ID_LATEST_ARTICLES_LOADER);
                     }
                     break;
             }

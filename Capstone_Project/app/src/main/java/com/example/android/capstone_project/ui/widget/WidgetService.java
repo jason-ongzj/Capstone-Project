@@ -5,18 +5,48 @@ import android.database.Cursor;
 import android.util.Log;
 import android.widget.RemoteViewsService;
 
+import com.example.android.capstone_project.data.ArticleContract;
 import com.example.android.capstone_project.data.ArticleDbHelper;
+import com.example.android.capstone_project.data.ArticleQuery;
 import com.example.android.capstone_project.data.DbUtils;
 
-public class WidgetService extends RemoteViewsService{
+public class WidgetService extends RemoteViewsService {
 
     public static final String TAG = "WidgetService";
+    private static Cursor cursor;
 
     @Override
     public RemoteViewsFactory onGetViewFactory(Intent intent) {
         DbUtils utils = new DbUtils(new ArticleDbHelper(this));
-        Cursor cursor = utils.queryTopArticles();
+
+        int appWidgetId = Integer.valueOf(intent.getData().getSchemeSpecificPart());
+        String category = ApiNewsStandWidgetConfigureActivity.loadCategoryPref(this, appWidgetId).toLowerCase();
+        String sortBy = ApiNewsStandWidgetConfigureActivity.loadSortByPref(this, appWidgetId);
+        Log.d(TAG, "onGetViewFactory: Category: " + category);
+        Log.d(TAG, "onGetViewFactory: SortBy: " + sortBy);
+
+        if(sortBy.equals("Top")){
+            cursor = utils.getDb().query(ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE
+                    , ArticleQuery.PROJECTION, "Category = ?",
+                    new String[] {category}, null, null, null);
+            if(cursor.getCount() == 0){
+                cursor = utils.getDb().query(ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE
+                        , ArticleQuery.PROJECTION, "Category = ?",
+                        new String[] {category}, null, null, null);
+            }
+        } else {
+            cursor = utils.getDb().query(ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE
+                    , ArticleQuery.PROJECTION, "Category = ?",
+                    new String[] {category}, null, null, null);
+            if(cursor.getCount() == 0){
+                cursor = utils.getDb().query(ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE
+                        , ArticleQuery.PROJECTION, "Category = ?",
+                        new String[] {category}, null, null, null);
+            }
+        }
+
         Log.d(TAG, "onGetViewFactory: " + cursor.getCount());
+
         return new WidgetDataProvider(this, cursor);
     }
 }

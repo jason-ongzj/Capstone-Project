@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/widget_display"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:layout_margin="0dp"
     android:orientation="horizontal">
 
@@ -15,6 +15,7 @@
         android:layout_marginBottom="0dp"
         android:layout_marginTop="0dp"
         android:scaleType="centerCrop"
+        android:contentDescription="@string/image"
         app:layout_constraintBottom_toTopOf="@+id/widget_display_title"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -22,6 +23,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
+        android:id="@+id/widget_text"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -35,7 +37,7 @@
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
             android:layout_marginStart="8dp"
-            android:textSize="16sp"
+            android:textSize="12sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@+id/card_display_description"
             app:layout_constraintHorizontal_bias="0.0"

@@ -1,6 +1,7 @@
 package com.example.android.capstone_project.ui.widget;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.widget.RemoteViews;
@@ -9,11 +10,14 @@ import android.widget.RemoteViewsService;
 import com.bumptech.glide.Glide;
 import com.example.android.capstone_project.R;
 import com.example.android.capstone_project.data.ArticleQuery;
+import com.example.android.capstone_project.ui.SearchActivity;
 
 public class WidgetDataProvider implements RemoteViewsService.RemoteViewsFactory {
 
     private Cursor mCursor;
     private Context mContext;
+
+    public static final String TAG = "WidgetDataProvider";
 
     public WidgetDataProvider(Context context, Cursor cursor){
         mCursor = cursor;
@@ -37,7 +41,7 @@ public class WidgetDataProvider implements RemoteViewsService.RemoteViewsFactory
 
     @Override
     public int getCount() {
-        return 10;
+        return mCursor.getCount() < 10 ? mCursor.getCount() : 10;
     }
 
     @Override
@@ -48,11 +52,18 @@ public class WidgetDataProvider implements RemoteViewsService.RemoteViewsFactory
         String title = mCursor.getString(ArticleQuery.TITLE);
         String description = mCursor.getString(ArticleQuery.DESCRIPTION);
         String imageUrl = mCursor.getString(ArticleQuery.URL_TO_IMAGE);
+        String url = mCursor.getString(ArticleQuery.URL);
+
         try {
             Bitmap bitmap = Glide.with(mContext).load(imageUrl).asBitmap().into(150, 150).get();
             view.setImageViewBitmap(R.id.widget_display_image, bitmap);
             view.setTextViewText(R.id.widget_display_title, title);
             view.setTextViewText(R.id.widget_display_description, description);
+
+            Intent intent = new Intent(mContext, SearchActivity.class);
+            intent.putExtra("URL", url);
+            intent.setAction("Browse");
+            view.setOnClickFillInIntent(R.id.widget_display, intent);
 
             return view;
         } catch (Exception e){
@@ -68,7 +79,7 @@ public class WidgetDataProvider implements RemoteViewsService.RemoteViewsFactory
 
     @Override
     public int getViewTypeCount() {
-        return 1;
+        return 2;
     }
 
     @Override

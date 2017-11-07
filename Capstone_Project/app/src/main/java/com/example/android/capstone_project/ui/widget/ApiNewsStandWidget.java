@@ -1,24 +1,49 @@
 package com.example.android.capstone_project.ui.widget;
 
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.example.android.capstone_project.R;
+import com.example.android.capstone_project.ui.WebViewActivity;
 
 public class ApiNewsStandWidget extends AppWidgetProvider {
+
+    public static final String TAG = "Widget";
 
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
 
-//        CharSequence widgetText = ApiNewsStandWidgetConfigureActivity.loadTitlePref(context, appWidgetId);
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.api_news_stand_widget);
-        views.setRemoteAdapter(R.id.widget_listView, new Intent(context, WidgetService.class));
 
-        // Instruct the widget manager to update the widget
+        Intent intent = new Intent(context, WidgetService.class);
+
+        String categoryValue = ApiNewsStandWidgetConfigureActivity.loadCategoryPref(context, appWidgetId);
+        String sortByValue = ApiNewsStandWidgetConfigureActivity.loadSortByPref(context, appWidgetId);
+
+        Log.d(TAG, "updateAppWidget: " + categoryValue);
+        Log.d(TAG, "updateAppWidget: " + sortByValue);
+
+        intent.setData(Uri.fromParts("content", String.valueOf(appWidgetId), null));
+
+        views.setRemoteAdapter(R.id.widget_listView, intent);
+        views.setTextViewText(R.id.Category, categoryValue);
+        views.setTextViewText(R.id.SortBy, sortByValue);
+
+        Intent appIntent = new Intent(context, WebViewActivity.class);
+        PendingIntent appPendingIntent = PendingIntent.getActivity(context, 0,
+                appIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        views.setPendingIntentTemplate(R.id.widget_listView, appPendingIntent);
+
+        Log.d(TAG, "updateAppWidget: " + appWidgetId);
+
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 

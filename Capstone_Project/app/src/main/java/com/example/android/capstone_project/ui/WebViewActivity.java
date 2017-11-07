@@ -36,4 +36,12 @@ public class WebViewActivity extends AppCompatActivity {
         super.onDestroy();
         webView.clearCache(true);
     }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        if(getIntent().getAction().equals("Search")){
+            onBackPressed();
+        }
+        return super.onSupportNavigateUp();
+    }
 }
