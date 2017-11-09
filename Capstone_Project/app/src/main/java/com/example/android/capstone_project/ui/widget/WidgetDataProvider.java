@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
@@ -19,7 +20,7 @@ public class WidgetDataProvider implements RemoteViewsService.RemoteViewsFactory
 
     public static final String TAG = "WidgetDataProvider";
 
-    public WidgetDataProvider(Context context, Cursor cursor){
+    public WidgetDataProvider(Context context, Cursor cursor, int widgetId){
         mCursor = cursor;
         mContext = context;
     }
@@ -31,7 +32,7 @@ public class WidgetDataProvider implements RemoteViewsService.RemoteViewsFactory
 
     @Override
     public void onDataSetChanged() {
-
+        Log.d(TAG, "onDataSetChanged: ");
     }
 
     @Override

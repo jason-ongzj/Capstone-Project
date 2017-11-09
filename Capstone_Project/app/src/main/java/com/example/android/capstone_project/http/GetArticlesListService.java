@@ -135,6 +135,7 @@ public class GetArticlesListService extends IntentService {
                             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(localIntent);
                             count = 0;
                         }
+                        Log.d(TAG, "onCompleted: " + Thread.activeCount());
                     }
 
                     @Override

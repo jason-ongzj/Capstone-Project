@@ -2,21 +2,22 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/clear_history"
     android:layout_width="match_parent"
-    android:layout_height="40dp">
+    android:layout_height="40dp"
+    android:background="@color/textBackground"
+    android:divider="@null"
+    android:dividerHeight="0dp">
 
     <ImageView
-        android:layout_width="40dp"
+        android:layout_width="48dp"
         android:layout_height="match_parent"
-        android:background="@color/textBackground"
         android:contentDescription="@string/image"
         android:padding="10dp"
-        android:src="@drawable/history_icon" />
+        android:src="@mipmap/search_history" />
 
     <TextView
         android:id="@+id/search_history_item"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:background="@color/textBackground"
         android:paddingBottom="10dp"
         android:paddingStart="30dp"
         android:paddingTop="10dp"

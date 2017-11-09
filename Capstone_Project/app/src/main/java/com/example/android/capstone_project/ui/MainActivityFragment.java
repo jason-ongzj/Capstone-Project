@@ -21,6 +21,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
 
 import com.example.android.capstone_project.R;
 import com.example.android.capstone_project.data.ArticleContract;
@@ -61,6 +63,7 @@ public class MainActivityFragment extends Fragment
 
     private ArticleDbHelper helper;
     private String spinnerSelection = "all";
+    private Spinner spinner;
     private DbUtils utils;
 
     private String[] spinnerItems = new String[] {"all", "business", "entertainment", "gaming", "general",
@@ -69,6 +72,9 @@ public class MainActivityFragment extends Fragment
     @Nullable
     @BindView(R.id.recyclerView)
     RecyclerView mRecyclerView;
+    @Nullable
+    @BindView(R.id.progress_bar)
+    ProgressBar mProgressBar;
 
     public MainActivityFragment() {
     }
@@ -111,23 +117,28 @@ public class MainActivityFragment extends Fragment
         }
 
         if (savedInstanceState == null) {
+            getArticlesList(getActivity());
+        }
+    }
 
-            IntentFilter topArticlesIntentFilter = new IntentFilter(getString(R.string.get_top_articles));
-            responseReceiver = new MyResponseReceiver();
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(responseReceiver, topArticlesIntentFilter);
+    public void getArticlesList(Context context){
+        IntentFilter topArticlesIntentFilter = new IntentFilter(getString(R.string.get_top_articles));
+        responseReceiver = new MyResponseReceiver();
+        LocalBroadcastManager.getInstance(context).registerReceiver(responseReceiver, topArticlesIntentFilter);
 
-            IntentFilter latestArticlesIntentFilter = new IntentFilter(getString(R.string.get_latest_articles));
-            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(responseReceiver, latestArticlesIntentFilter);
+        IntentFilter latestArticlesIntentFilter = new IntentFilter(getString(R.string.get_latest_articles));
+        LocalBroadcastManager.getInstance(context).registerReceiver(responseReceiver, latestArticlesIntentFilter);
 
-            switch (category_id) {
-                case TOP_ARTICLES:
-                    GetArticlesListService.getTopArticles(getActivity());
-                    break;
-                case LATEST_ARTICLES:
-                    GetArticlesListService.getLatestArticles(getActivity());
-                    break;
-            }
+        if(mCallback.getRefreshListButton()!= null)
+            mCallback.getRefreshListButton().setEnabled(false);
 
+        switch (category_id) {
+            case TOP_ARTICLES:
+                GetArticlesListService.getTopArticles(context);
+                break;
+            case LATEST_ARTICLES:
+                GetArticlesListService.getLatestArticles(context);
+                break;
         }
     }
 
@@ -136,7 +147,8 @@ public class MainActivityFragment extends Fragment
         super.onActivityCreated(savedInstanceState);
         if(savedInstanceState!= null) {
             category_id = savedInstanceState.getInt("CategoryId");
-            source_item = savedInstanceState.getString("CurrentSource");
+            source_item = savedInstanceState.getString("SourceItem");
+            current_source = savedInstanceState.getString("CurrentSource");
 
             Log.d(TAG, "onActivityCreated: " + source_item);
 
@@ -155,6 +167,7 @@ public class MainActivityFragment extends Fragment
     public void onSaveInstanceState(Bundle outState) {
         outState.putInt("CategoryId", category_id);
         outState.putString("CurrentSource", current_source);
+        outState.putString("SourceItem", source_item);
         super.onSaveInstanceState(outState);
     }
 
@@ -176,6 +189,10 @@ public class MainActivityFragment extends Fragment
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        mProgressBar.setVisibility(View.VISIBLE);
+        if(getActivity() instanceof MainActivity)
+            ((MainActivity) getActivity()).setItemSelectedTrue();
+
         SQLiteDatabase readDb = helper.getReadableDatabase();
         spinnerSelection = ((MainActivity) getActivity()).getSpinnerSelection();
 
@@ -269,13 +286,14 @@ public class MainActivityFragment extends Fragment
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        mProgressBar.setVisibility(View.INVISIBLE);
         updateNavAdapter();
-        if(getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).setItemSelectedTrue();
 
-            // Used for testing purposes
-            ((MainActivity) getActivity()).setSyncFinished();
-        }
+        mCallback.setSyncFinished();
+        mCallback.setItemSelectedTrue();
+        mCallback.getToggle().setDrawerIndicatorEnabled(true);
+        mCallback.getSpinner().setVisibility(View.VISIBLE);
+        mCallback.getRefreshListButton().setEnabled(true);
 
         // Save current source for config reset. "if" condition is required since there are two
         // fragments tracking a single variable, else current_source will be "".
@@ -311,7 +329,6 @@ public class MainActivityFragment extends Fragment
         sourceCursor = utils.querySources();
         NavigationAdapter navAdapter = new NavigationAdapter(getActivity(), this);
         navAdapter.setCursor(sourceCursor);
-        Log.d(TAG, "updateNavAdapter: " + sourceCursor.getCount());
         listView.setAdapter(navAdapter);
     }
 
@@ -338,7 +355,6 @@ public class MainActivityFragment extends Fragment
                 case TOP_ARTICLES:
                     ArrayList<Article> s = intent.getParcelableArrayListExtra("GET_TOP_ARTICLES");
                     if(s!=null) {
-                        Log.d(TAG, "onReceive: " + s.size());
                         utils.insertIntoDb(s, "top");
                         startLoader(ID_TOP_ARTICLES_LOADER);
                     }
@@ -346,7 +362,6 @@ public class MainActivityFragment extends Fragment
                 case LATEST_ARTICLES:
                     s = intent.getParcelableArrayListExtra("GET_LATEST_ARTICLES");
                     if(s!= null){
-                    Log.d(TAG, "onReceive: " + s.size());
                         utils.insertIntoDb(s, "latest");
                         startLoader(ID_LATEST_ARTICLES_LOADER);
                     }

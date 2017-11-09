@@ -4,45 +4,36 @@
     android:background="#09C"
     android:orientation="vertical">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:weightSum="2">
 
         <TextView
             android:id="@+id/Category"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_marginEnd="125dp"
+            android:layout_marginEnd="0dp"
+            android:layout_weight="1"
             android:padding="10dp"
             android:text="@string/category"
             android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true" />
+            android:textStyle="bold" />
 
         <TextView
-            android:layout_width="80dp"
-            android:layout_height="40dp"
-            android:padding="10dp"
             android:id="@+id/SortBy"
-            android:text="@string/sortBy"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_alignParentTop="true"
-            android:layout_toStartOf="@+id/imageView2" />
-
-        <ImageView
-            android:layout_width="30dp"
+            android:layout_width="wrap_content"
             android:layout_height="40dp"
-            android:layout_marginEnd="5dp"
-            android:contentDescription="@string/image"
-            android:padding="5dp"
-            android:src="@drawable/widget_menu"
-            android:id="@+id/imageView2"
-            android:layout_alignParentEnd="true" />
+            android:layout_marginEnd="0dp"
+            android:layout_weight="1"
+            android:padding="10dp"
+            android:text="@string/sortBy"
+            android:textAlignment="textEnd"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
-    </RelativeLayout>
+    </LinearLayout>
 
     <ListView
         android:id="@+id/widget_listView"

@@ -2,6 +2,7 @@ package com.example.android.capstone_project.ui;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -15,6 +16,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.SparseArray;
@@ -51,7 +53,9 @@ public class MainActivity extends AppCompatActivity
             "Music", "Politics","Science-and-Nature", "Sport", "Technology"};
 
     private ViewPager mPager;
+    private MenuItem refreshList;
     private MyPagerAdapter mPagerAdapter;
+    private ActionBarDrawerToggle toggle;
 
     private String spinnerSelection = "all";
     private String source_item = "";
@@ -97,9 +101,10 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+        toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
+        toggle.setDrawerIndicatorEnabled(false);
         toggle.syncState();
 
         navigationView.setNavigationItemSelectedListener(this);
@@ -133,6 +138,7 @@ public class MainActivity extends AppCompatActivity
                 android.R.layout.simple_list_item_activated_1, spinnerItems);
 
         spinner.setAdapter(spinnerAdapter);
+        spinner.setVisibility(View.INVISIBLE);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
@@ -155,13 +161,11 @@ public class MainActivity extends AppCompatActivity
     public void onSourceItemClicked(String source, String category) {
         source_item = source;
         if(spinnerSelection.equals(category)){
-
             // Fragment update cannot occur if category of selected source is same as shown in
             // spinner item. Therefore, do a manual update.
             updateFragments(source);
             source_item = "";
         } else {
-
             // If source category is different from selected category from spinner, update via
             // spinner itemSelected listener.
             switch (category) {
@@ -198,6 +202,59 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            new AlertDialog.Builder(this)
+                    .setMessage("Are you sure you want to exit?")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            MainActivity.this.finish();
+                        }
+                    })
+                    .setNegativeButton("No", null)
+                    .show();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_main_menu, menu);
+        refreshList = menu.findItem(R.id.refresh);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if(id == R.id.search){
+            Intent intent = new Intent(this, SearchActivity.class);
+            startActivity(intent);
+        } else if(id == R.id.refresh){
+            Fragment fragment_1 = mPagerAdapter.getRegisteredFragment(0);
+            Fragment fragment_2 = mPagerAdapter.getRegisteredFragment(1);
+            if (fragment_1 instanceof MainActivityFragment) {
+                ((MainActivityFragment) fragment_1).getArticlesList(this);
+            }
+            if(fragment_2 instanceof MainActivityFragment) {
+                ((MainActivityFragment) fragment_2).getArticlesList(this);
+            }
+            mPagerAdapter.notifyDataSetChanged();
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+
+
+    @Override
     public void updateFragments(String source) {
         Fragment fragment_1 = mPagerAdapter.getRegisteredFragment(0);
         Fragment fragment_2 = mPagerAdapter.getRegisteredFragment(1);
@@ -218,44 +275,9 @@ public class MainActivity extends AppCompatActivity
 
     // To only allow activation spinner listener on selection, so that listener is not called after
     // loading
+    @Override
     public void setItemSelectedTrue(){
         itemSelected = true;
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-    }
-
-    public String getSpinnerSelection(){
-        return spinnerSelection;
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if(id == R.id.search){
-            Intent intent = new Intent(this, SearchActivity.class);
-            startActivity(intent);
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -270,6 +292,27 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    public String getSpinnerSelection(){
+        return spinnerSelection;
+    }
+
+    @Nullable
+    @Override
+    public Spinner getSpinner() {
+        return spinner;
+    }
+
+    @Override
+    public MenuItem getRefreshListButton() {
+        return refreshList;
+    }
+
+    @Override
+    public ActionBarDrawerToggle getToggle() {
+        return toggle;
+    }
+
+    @Override
     public void setSyncFinished(){
         syncFinished = true;
     }

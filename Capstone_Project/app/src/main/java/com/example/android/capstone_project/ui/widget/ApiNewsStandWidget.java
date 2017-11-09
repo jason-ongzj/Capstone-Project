@@ -6,7 +6,6 @@ import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.example.android.capstone_project.R;
@@ -27,8 +26,8 @@ public class ApiNewsStandWidget extends AppWidgetProvider {
         String categoryValue = ApiNewsStandWidgetConfigureActivity.loadCategoryPref(context, appWidgetId);
         String sortByValue = ApiNewsStandWidgetConfigureActivity.loadSortByPref(context, appWidgetId);
 
-        Log.d(TAG, "updateAppWidget: " + categoryValue);
-        Log.d(TAG, "updateAppWidget: " + sortByValue);
+        intent.putExtra("Category", categoryValue);
+        intent.putExtra("SortBy", sortByValue);
 
         intent.setData(Uri.fromParts("content", String.valueOf(appWidgetId), null));
 
@@ -36,13 +35,19 @@ public class ApiNewsStandWidget extends AppWidgetProvider {
         views.setTextViewText(R.id.Category, categoryValue);
         views.setTextViewText(R.id.SortBy, sortByValue);
 
+//        Intent activityIntent = new Intent(context, ApiNewsStandWidgetConfigureActivity.class);
+//        activityIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+//        activityIntent.setData(Uri.fromParts("content", String.valueOf(appWidgetId), null));
+//        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
+//                activityIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+//
+//        views.setOnClickPendingIntent(R.id.configure_options, pendingIntent);
+
         Intent appIntent = new Intent(context, WebViewActivity.class);
         PendingIntent appPendingIntent = PendingIntent.getActivity(context, 0,
                 appIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         views.setPendingIntentTemplate(R.id.widget_listView, appPendingIntent);
-
-        Log.d(TAG, "updateAppWidget: " + appWidgetId);
 
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
@@ -73,5 +78,6 @@ public class ApiNewsStandWidget extends AppWidgetProvider {
     public void onDisabled(Context context) {
         // Enter relevant functionality for when the last widget is disabled
     }
+
 }
 

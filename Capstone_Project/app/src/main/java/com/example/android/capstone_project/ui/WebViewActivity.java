@@ -38,10 +38,11 @@ public class WebViewActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onSupportNavigateUp() {
-        if(getIntent().getAction().equals("Search")){
-            onBackPressed();
+    public void onBackPressed() {
+        if(getIntent().getAction().equals("Search")) {
+            super.onBackPressed();
+        } else {
+            moveTaskToBack(true);
         }
-        return super.onSupportNavigateUp();
     }
 }

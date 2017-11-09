@@ -20,10 +20,9 @@ public class WidgetService extends RemoteViewsService {
         DbUtils utils = new DbUtils(new ArticleDbHelper(this));
 
         int appWidgetId = Integer.valueOf(intent.getData().getSchemeSpecificPart());
-        String category = ApiNewsStandWidgetConfigureActivity.loadCategoryPref(this, appWidgetId).toLowerCase();
-        String sortBy = ApiNewsStandWidgetConfigureActivity.loadSortByPref(this, appWidgetId);
-        Log.d(TAG, "onGetViewFactory: Category: " + category);
-        Log.d(TAG, "onGetViewFactory: SortBy: " + sortBy);
+
+        String category = intent.getStringExtra("Category").toLowerCase();
+        String sortBy = intent.getStringExtra("SortBy");
 
         if(sortBy.equals("Top")){
             cursor = utils.getDb().query(ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE
@@ -47,6 +46,6 @@ public class WidgetService extends RemoteViewsService {
 
         Log.d(TAG, "onGetViewFactory: " + cursor.getCount());
 
-        return new WidgetDataProvider(this, cursor);
+        return new WidgetDataProvider(this, cursor, appWidgetId);
     }
 }

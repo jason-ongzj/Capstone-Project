@@ -10,7 +10,7 @@
     <android.support.v7.widget.Toolbar
         android:id="@+id/search_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?android:attr/actionBarSize"
+        android:layout_height="48dp"
         android:background="?attr/colorPrimary"
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="0dp">
@@ -24,9 +24,10 @@
                 android:id="@+id/image"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:layout_margin="13dp"
+                android:layout_margin="9dp"
                 android:contentDescription="@string/image"
-                app:srcCompat="?android:attr/actionModeWebSearchDrawable" />
+                android:padding="2dp"
+                app:srcCompat="@mipmap/search_icon" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -37,17 +38,17 @@
                     android:id="@+id/editText"
                     android:layout_width="match_parent"
                     android:layout_height="30dp"
-                    android:layout_marginBottom="13dp"
-                    android:layout_marginEnd="13dp"
-                    android:layout_marginTop="13dp"
+                    android:layout_marginBottom="9dp"
+                    android:layout_marginEnd="9dp"
+                    android:layout_marginTop="9dp"
                     android:background="@color/cardview_dark_background"
+                    android:cursorVisible="false"
                     android:hint="@string/search_articles"
                     android:imeOptions="actionSearch|flagNavigatePrevious"
-                    android:cursorVisible="false"
                     android:inputType="textNoSuggestions"
+                    android:maxLines="1"
                     android:paddingLeft="8dp"
                     android:paddingRight="8dp"
-                    android:maxLines="1"
                     android:textSize="16sp" />
 
                 <ImageView
@@ -57,7 +58,8 @@
                     android:layout_alignEnd="@+id/editText"
                     android:layout_alignTop="@+id/editText"
                     android:contentDescription="@string/image"
-                    android:src="@android:drawable/ic_delete"
+                    android:padding="5dp"
+                    android:src="@mipmap/close"
                     android:visibility="invisible" />
             </RelativeLayout>
 
@@ -70,27 +72,27 @@
         android:layout_height="match_parent">
 
         <LinearLayout
+            android:id="@+id/search_history"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:elevation="8dp"
-            android:id="@+id/search_history"
             android:background="@color/gray_alpha"
-            android:clickable="true">
+            android:clickable="true"
+            android:elevation="8dp"
+            android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/clear_history"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:id="@+id/clear_history">
+                android:layout_height="40dp">
 
                 <ImageView
                     android:id="@+id/delete_history"
-                    android:layout_width="40dp"
-                    android:contentDescription="@string/image"
+                    android:layout_width="48dp"
                     android:layout_height="match_parent"
                     android:background="@color/grey"
-                    android:padding="10dp"
-                    android:src="@drawable/delete_history" />
+                    android:contentDescription="@string/image"
+                    android:padding="8dp"
+                    android:src="@mipmap/close_circle" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -100,23 +102,32 @@
                     android:paddingStart="30dp"
                     android:paddingTop="10dp"
                     android:text="@string/clear_search_history"
-                    android:textSize="16sp"
-                    android:textColor="@color/darker_gray" />
+                    android:textColor="@color/darker_gray"
+                    android:textSize="16sp" />
 
             </LinearLayout>
 
-            <ListView
-                android:id="@+id/search_listView"
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:background="@color/textBackground">
+
+                <ListView
+                    android:id="@+id/search_listView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/textBackground"
+                    android:divider="@null"
+                    android:dividerHeight="0dp"/>
+            </FrameLayout>
 
         </LinearLayout>
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/search_recyclerView"
-            android:elevation="0dp"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:elevation="0dp">
         </android.support.v7.widget.RecyclerView>
 
     </FrameLayout>

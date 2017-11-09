@@ -1,6 +1,7 @@
 package com.example.android.capstone_project.ui.widget;
 
 import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -27,6 +28,7 @@ public class ApiNewsStandWidgetConfigureActivity extends AppCompatActivity {
             final Context context = ApiNewsStandWidgetConfigureActivity.this;
 
             // When the button is clicked, store the string locally
+            setResult(RESULT_CANCELED);
             saveCategoryPref(context, mAppWidgetId);
             saveSortByPref(context, mAppWidgetId);
 
@@ -38,6 +40,9 @@ public class ApiNewsStandWidgetConfigureActivity extends AppCompatActivity {
             Intent resultValue = new Intent();
             resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
             setResult(RESULT_OK, resultValue);
+            int appWidgetIds[] = appWidgetManager.getAppWidgetIds(new ComponentName(context, ApiNewsStandWidget.class));
+            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.widget_listView);
+
             finish();
         }
     };
