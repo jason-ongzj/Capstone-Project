@@ -42,15 +42,16 @@ public class MainActivity extends AppCompatActivity
 
     @BindView(R.id.toolbar) Toolbar toolbar;
     @BindView(R.id.fab) FloatingActionButton fab;
+    @Nullable
     @BindView(R.id.drawer_layout) DrawerLayout drawer;
+    @Nullable
     @BindView(R.id.nav_view) NavigationView navigationView;
     @BindView(R.id.tab_layout) TabLayout tabLayout;
     @BindView(R.id.listView) ListView listView;
-    @Nullable
     @BindView(R.id.spinner) Spinner spinner;
 
     private String[] spinnerItems = new String[] {"All", "Business", "Entertainment", "Gaming", "General",
-            "Music", "Politics","Science-and-Nature", "Sport", "Technology"};
+            "Music", "Politics","Science", "Sport", "Technology"};
 
     private ViewPager mPager;
     private MenuItem refreshList;
@@ -101,13 +102,16 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.setDrawerIndicatorEnabled(false);
-        toggle.syncState();
+        // For phones only
+        if(drawer != null) {
+            toggle = new ActionBarDrawerToggle(
+                    this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+            drawer.addDrawerListener(toggle);
+            toggle.setDrawerIndicatorEnabled(false);
+            toggle.syncState();
 
-        navigationView.setNavigationItemSelectedListener(this);
+            navigationView.setNavigationItemSelectedListener(this);
+        }
 
         tabLayout.addTab(tabLayout.newTab().setText("Top"));
         tabLayout.addTab(tabLayout.newTab().setText("Latest"));
@@ -144,6 +148,9 @@ public class MainActivity extends AppCompatActivity
             public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
                 if(itemSelected) {
                     spinnerSelection = adapterView.getItemAtPosition(pos).toString().toLowerCase();
+                    if(spinnerSelection.equals("science")) {
+                        spinnerSelection = "science-and-nature";
+                    }
                     Toast.makeText(MainActivity.this, spinnerSelection, Toast.LENGTH_SHORT).show();
                     updateFragments(source_item);
                     source_item = "";
@@ -152,7 +159,6 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
-                updateFragments(source_item);
             }
         });
     }
@@ -208,8 +214,20 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
+        if(drawer != null){
+            if (drawer.isDrawerOpen(GravityCompat.START)) {
+                drawer.closeDrawer(GravityCompat.START);
+            } else {
+                new AlertDialog.Builder(this)
+                        .setMessage("Are you sure you want to exit?")
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                MainActivity.this.finish();
+                            }
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
+            }
         } else {
             new AlertDialog.Builder(this)
                     .setMessage("Are you sure you want to exit?")
@@ -242,17 +260,17 @@ public class MainActivity extends AppCompatActivity
             Fragment fragment_2 = mPagerAdapter.getRegisteredFragment(1);
             if (fragment_1 instanceof MainActivityFragment) {
                 ((MainActivityFragment) fragment_1).getArticlesList(this);
+                ((MainActivityFragment) fragment_1).hideRecyclerView();
             }
             if(fragment_2 instanceof MainActivityFragment) {
                 ((MainActivityFragment) fragment_2).getArticlesList(this);
+                ((MainActivityFragment) fragment_2).hideRecyclerView();
             }
             mPagerAdapter.notifyDataSetChanged();
         }
 
         return super.onOptionsItemSelected(item);
     }
-
-
 
     @Override
     public void updateFragments(String source) {
@@ -282,7 +300,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void closeDrawer() {
-        drawer.closeDrawer(GravityCompat.START);
+        if(drawer != null)
+            drawer.closeDrawer(GravityCompat.START);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -312,6 +331,7 @@ public class MainActivity extends AppCompatActivity
         return toggle;
     }
 
+    // For testing purposes
     @Override
     public void setSyncFinished(){
         syncFinished = true;

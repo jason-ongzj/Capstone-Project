@@ -287,11 +287,14 @@ public class MainActivityFragment extends Fragment
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mProgressBar.setVisibility(View.INVISIBLE);
+        mRecyclerView.setVisibility(View.VISIBLE);
         updateNavAdapter();
 
         mCallback.setSyncFinished();
         mCallback.setItemSelectedTrue();
-        mCallback.getToggle().setDrawerIndicatorEnabled(true);
+        if(mCallback.getToggle() != null) {
+            mCallback.getToggle().setDrawerIndicatorEnabled(true);
+        }
         mCallback.getSpinner().setVisibility(View.VISIBLE);
         mCallback.getRefreshListButton().setEnabled(true);
 
@@ -330,6 +333,10 @@ public class MainActivityFragment extends Fragment
         NavigationAdapter navAdapter = new NavigationAdapter(getActivity(), this);
         navAdapter.setCursor(sourceCursor);
         listView.setAdapter(navAdapter);
+    }
+
+    public void hideRecyclerView(){
+        mRecyclerView.setVisibility(View.INVISIBLE);
     }
 
     public void setSource(String source){
