@@ -123,12 +123,19 @@
 
         </LinearLayout>
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/search_recyclerView"
+        <com.example.android.capstone_project.ui.MaxWidthLinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:elevation="0dp">
-        </android.support.v7.widget.RecyclerView>
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:maxWidth="600dp">
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/search_recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:elevation="0dp">
+            </android.support.v7.widget.RecyclerView>
+
+        </com.example.android.capstone_project.ui.MaxWidthLinearLayout>
 
     </FrameLayout>
 </LinearLayout>

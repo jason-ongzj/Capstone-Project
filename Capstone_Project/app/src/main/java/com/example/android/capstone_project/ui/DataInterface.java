@@ -5,6 +5,8 @@ import android.view.MenuItem;
 import android.widget.ListView;
 import android.widget.Spinner;
 
+import com.example.android.capstone_project.http.NetworkChangeReceiver;
+
 interface DataInterface {
     ListView getListView();
     void closeDrawer();
@@ -14,5 +16,10 @@ interface DataInterface {
     ActionBarDrawerToggle getToggle();
     MenuItem getRefreshListButton();
     void setSyncFinished();
-    void setItemSelectedTrue();
+    boolean getRefreshStatus();
+    void setRefreshStatusFalse();
+    boolean isNetworkChangeReceiverSet();
+    void setNetworkChangeReceiverFalse();
+    NetworkChangeReceiver getNetworkChangeReceiver();
+    void hideProgressBar();
 }

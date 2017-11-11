@@ -2,14 +2,17 @@ package com.example.android.capstone_project.ui;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v13.app.FragmentStatePagerAdapter;
 import android.support.v4.view.GravityCompat;
@@ -27,11 +30,15 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.android.capstone_project.R;
 import com.example.android.capstone_project.http.GetArticlesIdlingResource;
+import com.example.android.capstone_project.http.NetworkChangeReceiver;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -40,18 +47,24 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         DataInterface{
 
-    @BindView(R.id.toolbar) Toolbar toolbar;
-    @BindView(R.id.fab) FloatingActionButton fab;
+    // For phone only
     @Nullable
     @BindView(R.id.drawer_layout) DrawerLayout drawer;
     @Nullable
     @BindView(R.id.nav_view) NavigationView navigationView;
+
+    // For both phone and tablet layout
+    @BindView(R.id.toolbar) Toolbar toolbar;
     @BindView(R.id.tab_layout) TabLayout tabLayout;
     @BindView(R.id.listView) ListView listView;
     @BindView(R.id.spinner) Spinner spinner;
+    @BindView(R.id.progress_bar) ProgressBar progressBar;
+    @BindView(R.id.adView) AdView adView;
 
     private String[] spinnerItems = new String[] {"All", "Business", "Entertainment", "Gaming", "General",
             "Music", "Politics","Science", "Sport", "Technology"};
+
+    public static final String TAG = "MainActivity";
 
     private ViewPager mPager;
     private MenuItem refreshList;
@@ -60,8 +73,14 @@ public class MainActivity extends AppCompatActivity
 
     private String spinnerSelection = "all";
     private String source_item = "";
-    private boolean itemSelected = false;
+
     private boolean syncFinished = false;
+    private boolean isRefreshed = true;
+    private boolean isNetworkChangeReceiverSet = false;
+
+    private ConnectivityManager cm;
+    private NetworkInfo activeNetwork;
+    private NetworkChangeReceiver networkChangeReceiver;
 
     private GetArticlesIdlingResource mIdlingResource;
 
@@ -94,20 +113,12 @@ public class MainActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayShowTitleEnabled(false);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         // For phones only
         if(drawer != null) {
             toggle = new ActionBarDrawerToggle(
                     this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
             drawer.addDrawerListener(toggle);
-            toggle.setDrawerIndicatorEnabled(false);
             toggle.syncState();
 
             navigationView.setNavigationItemSelectedListener(this);
@@ -142,11 +153,12 @@ public class MainActivity extends AppCompatActivity
                 android.R.layout.simple_list_item_activated_1, spinnerItems);
 
         spinner.setAdapter(spinnerAdapter);
-        spinner.setVisibility(View.INVISIBLE);
+//        spinner.setVisibility(View.INVISIBLE);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
-                if(itemSelected) {
+                // Only activate item selection when activity is not being refreshed
+                if(!isRefreshed) {
                     spinnerSelection = adapterView.getItemAtPosition(pos).toString().toLowerCase();
                     if(spinnerSelection.equals("science")) {
                         spinnerSelection = "science-and-nature";
@@ -161,11 +173,57 @@ public class MainActivity extends AppCompatActivity
             public void onNothingSelected(AdapterView<?> adapterView) {
             }
         });
+
+        cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
+        networkChangeReceiver = new NetworkChangeReceiver();
+
+        if(!isConnected){
+            promptNetworkConnection();
+        }
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                .build();
+        adView.loadAd(adRequest);
+
+    }
+
+    private void promptNetworkConnection(){
+        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkChangeReceiver, filter);
+        isNetworkChangeReceiverSet = true;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Please connect to the Internet.")
+                .setPositiveButton("Connect", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        startActivityForResult(new Intent(Settings.ACTION_WIFI_SETTINGS), 999);
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(isNetworkChangeReceiverSet && networkChangeReceiver != null)
+            unregisterReceiver(networkChangeReceiver);
     }
 
     @Override
     public void onSourceItemClicked(String source, String category) {
         source_item = source;
+        isRefreshed = false;
         if(spinnerSelection.equals(category)){
             // Fragment update cannot occur if category of selected source is same as shown in
             // spinner item. Therefore, do a manual update.
@@ -214,31 +272,31 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
+        // Phone
         if(drawer != null){
             if (drawer.isDrawerOpen(GravityCompat.START)) {
                 drawer.closeDrawer(GravityCompat.START);
             } else {
-                new AlertDialog.Builder(this)
-                        .setMessage("Are you sure you want to exit?")
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                MainActivity.this.finish();
-                            }
-                        })
-                        .setNegativeButton("No", null)
-                        .show();
+                quitAlertDialog();
             }
-        } else {
-            new AlertDialog.Builder(this)
-                    .setMessage("Are you sure you want to exit?")
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            MainActivity.this.finish();
-                        }
-                    })
-                    .setNegativeButton("No", null)
-                    .show();
+        } else
+
+        // Tablet
+        {
+            quitAlertDialog();
         }
+    }
+
+    private void quitAlertDialog(){
+        new AlertDialog.Builder(this)
+                .setMessage("Are you sure you want to exit?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        MainActivity.this.finish();
+                    }
+                })
+                .setNegativeButton("No", null)
+                .show();
     }
 
     @Override
@@ -253,25 +311,55 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if(id == R.id.search){
+
             Intent intent = new Intent(this, SearchActivity.class);
             startActivity(intent);
+
         } else if(id == R.id.refresh){
+
+            listView.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+            isRefreshed = true;
             Fragment fragment_1 = mPagerAdapter.getRegisteredFragment(0);
             Fragment fragment_2 = mPagerAdapter.getRegisteredFragment(1);
-            if (fragment_1 instanceof MainActivityFragment) {
-                ((MainActivityFragment) fragment_1).getArticlesList(this);
-                ((MainActivityFragment) fragment_1).hideRecyclerView();
-            }
-            if(fragment_2 instanceof MainActivityFragment) {
-                ((MainActivityFragment) fragment_2).getArticlesList(this);
-                ((MainActivityFragment) fragment_2).hideRecyclerView();
-            }
-            mPagerAdapter.notifyDataSetChanged();
-        }
 
+            ((MainActivityFragment) fragment_1).hideRecyclerView();
+            ((MainActivityFragment) fragment_2).hideRecyclerView();
+
+            cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+            activeNetwork = cm.getActiveNetworkInfo();
+            boolean isConnected = activeNetwork != null &&
+                    activeNetwork.isConnectedOrConnecting();
+            if(isConnected) {
+                ((MainActivityFragment) fragment_1).getArticlesList(this);
+                ((MainActivityFragment) fragment_2).getArticlesList(this);
+                mPagerAdapter.notifyDataSetChanged();
+            } else {
+                promptNetworkConnection();
+            }
+
+        }
         return super.onOptionsItemSelected(item);
     }
 
+    // Call when network receiver is registered
+    @Override
+    public boolean isNetworkChangeReceiverSet() {
+        return isNetworkChangeReceiverSet;
+    }
+
+    // Call after fragment cursor loading is finished
+    @Override
+    public void setNetworkChangeReceiverFalse() {
+        isNetworkChangeReceiverSet = false;
+    }
+
+    @Override
+    public NetworkChangeReceiver getNetworkChangeReceiver() {
+        return networkChangeReceiver;
+    }
+
+    // Called when spinner item or nav item selected
     @Override
     public void updateFragments(String source) {
         Fragment fragment_1 = mPagerAdapter.getRegisteredFragment(0);
@@ -289,13 +377,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public ListView getListView() {
         return listView;
-    }
-
-    // To only allow activation spinner listener on selection, so that listener is not called after
-    // loading
-    @Override
-    public void setItemSelectedTrue(){
-        itemSelected = true;
     }
 
     @Override
@@ -327,6 +408,16 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public boolean getRefreshStatus() {
+        return isRefreshed;
+    }
+
+    @Override
+    public void setRefreshStatusFalse() {
+        isRefreshed = false;
+    }
+
+    @Override
     public ActionBarDrawerToggle getToggle() {
         return toggle;
     }
@@ -337,6 +428,12 @@ public class MainActivity extends AppCompatActivity
         syncFinished = true;
     }
 
+    @Override
+    public void hideProgressBar() {
+        progressBar.setVisibility(View.INVISIBLE);
+    }
+
+    // For testing purposes
     public boolean isSyncFinished(){
         return syncFinished;
     }

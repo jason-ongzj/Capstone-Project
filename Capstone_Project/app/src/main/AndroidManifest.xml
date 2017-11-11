@@ -33,12 +33,12 @@
 
         <service android:name=".http.GetArticlesListService" />
 
-        <activity android:name=".ui.WebViewActivity"
-            android:parentActivityName=".ui.MainActivity"/>
+        <activity android:name=".ui.WebViewActivity" />
         <activity
             android:name=".ui.SearchActivity"
             android:parentActivityName=".ui.MainActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:configChanges="screenSize|orientation|keyboardHidden"/>
 
         <receiver android:name=".ui.widget.ApiNewsStandWidget">
             <intent-filter>

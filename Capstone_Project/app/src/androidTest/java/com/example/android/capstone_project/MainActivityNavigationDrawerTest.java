@@ -50,10 +50,12 @@ public class MainActivityNavigationDrawerTest {
     // which is ABC News Au. Check that spinner selection returns "General" category.
     @Test
     public void navigationDrawerTest(){
-        onView(withId(R.id.drawer_layout)).perform(DrawerActions.open());
-        onView(withId(R.id.listView)).check(matches(isDisplayed()));
+        if (mActivityTestRule.getActivity().getToggle()!= null) {
+            onView(withId(R.id.drawer_layout)).perform(DrawerActions.open());
+            onView(withId(R.id.listView)).check(matches(isDisplayed()));
 
-        onData(anything()).atPosition(0).inAdapterView(withId(R.id.listView)).perform(click());
-        onView(withId(R.id.spinner)).check(matches(withSpinnerText(containsString("General"))));
+            onData(anything()).atPosition(0).inAdapterView(withId(R.id.listView)).perform(click());
+            onView(withId(R.id.spinner)).check(matches(withSpinnerText(containsString("General"))));
+        }
     }
 }
