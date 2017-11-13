@@ -23,6 +23,7 @@ import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 
+// Test assumes wifi/mobile connection
 @RunWith(AndroidJUnit4.class)
 public class SearchActivityTest {
 
@@ -55,5 +56,6 @@ public class SearchActivityTest {
 
         onView(withId(R.id.search_recyclerView))
                 .perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
+        onView(withId(R.id.webView)).check(matches(isDisplayed()));
     }
 }

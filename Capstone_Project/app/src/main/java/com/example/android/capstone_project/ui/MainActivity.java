@@ -32,6 +32,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.capstone_project.R;
@@ -124,13 +125,14 @@ public class MainActivity extends AppCompatActivity
             navigationView.setNavigationItemSelectedListener(this);
         }
 
-        tabLayout.addTab(tabLayout.newTab().setText("Top"));
-        tabLayout.addTab(tabLayout.newTab().setText("Latest"));
+        tabLayout.addTab(tabLayout.newTab().setText(this.getString(R.string.top)));
+        tabLayout.addTab(tabLayout.newTab().setText(this.getString(R.string.latest)));
 
         mPagerAdapter = new MyPagerAdapter(getFragmentManager(), tabLayout.getTabCount());
 
         mPager = (ViewPager) findViewById(R.id.pager);
         mPager.setAdapter(mPagerAdapter);
+        mPager.setOffscreenPageLimit(1);
 
         mPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 
@@ -159,8 +161,8 @@ public class MainActivity extends AppCompatActivity
                 // Only activate item selection when activity is not being refreshed
                 if(!isRefreshed) {
                     spinnerSelection = adapterView.getItemAtPosition(pos).toString().toLowerCase();
-                    if(spinnerSelection.equals("science")) {
-                        spinnerSelection = "science-and-nature";
+                    if(spinnerSelection.equals(getString(R.string.science))) {
+                        spinnerSelection = getString(R.string.science_and_nature).toLowerCase();
                     }
                     Toast.makeText(MainActivity.this, spinnerSelection, Toast.LENGTH_SHORT).show();
                     updateFragments(source_item);
@@ -209,6 +211,9 @@ public class MainActivity extends AppCompatActivity
                 });
         AlertDialog alert = builder.create();
         alert.show();
+        alert.getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        TextView messageText = (TextView) alert.findViewById(android.R.id.message);
+        messageText.setTextDirection(View.TEXT_DIRECTION_LOCALE);
     }
 
     @Override
@@ -274,19 +279,12 @@ public class MainActivity extends AppCompatActivity
         if(drawer != null){
             if (drawer.isDrawerOpen(GravityCompat.START)) {
                 drawer.closeDrawer(GravityCompat.START);
-            } else {
-                quitAlertDialog();
             }
-        } else
-
-        // Tablet
-        {
-            quitAlertDialog();
         }
     }
 
     private void quitAlertDialog(){
-        new AlertDialog.Builder(this)
+        AlertDialog alert = new AlertDialog.Builder(this)
                 .setMessage("Are you sure you want to exit?")
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
@@ -295,6 +293,9 @@ public class MainActivity extends AppCompatActivity
                 })
                 .setNegativeButton("No", null)
                 .show();
+        alert.getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        TextView messageText = (TextView) alert.findViewById(android.R.id.message);
+        messageText.setTextDirection(View.TEXT_DIRECTION_LOCALE);
     }
 
     @Override

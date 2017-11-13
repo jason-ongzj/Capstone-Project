@@ -22,7 +22,6 @@ public class ApiNewsStandWidgetConfigureActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "com.example.android.capstone_project.ui.widget.ApiNewsStandWidget";
     private static final String PREF_PREFIX_KEY = "appwidget_";
     int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
-    public static final String TAG = "ConfigureActivity";
     View.OnClickListener mOnClickListener = new View.OnClickListener() {
         public void onClick(View v) {
             final Context context = ApiNewsStandWidgetConfigureActivity.this;

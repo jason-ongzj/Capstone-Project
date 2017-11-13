@@ -18,7 +18,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,9 +63,6 @@ public class MainActivityFragment extends Fragment
     private ArticleDbHelper helper;
     private String spinnerSelection = "all";
     private DbUtils utils;
-
-    private String[] spinnerItems = new String[] {"all", "business", "entertainment", "gaming", "general",
-            "music", "politics", "science-and-nature", "sport", "technology"};
 
     @Nullable
     @BindView(R.id.recyclerView)
@@ -148,14 +144,6 @@ public class MainActivityFragment extends Fragment
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putInt("CategoryId", category_id);
-        outState.putString("CurrentSource", current_source);
-        outState.putString("SourceItem", source_item);
-        super.onSaveInstanceState(outState);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              final Bundle savedInstanceState) {
         View mRootView = inflater.inflate(R.layout.fragment_main_activity, container, false);
@@ -183,7 +171,7 @@ public class MainActivityFragment extends Fragment
         switch(category_id){
             case TOP_ARTICLES:
 
-                if(spinnerSelection.equals("all")){
+                if(spinnerSelection.equals(this.getString(R.string.all))){
                     source_item = "";
                     return new CursorLoader(getActivity(), top_articles_uri, ArticleQuery.PROJECTION,
                             null, null, null);
@@ -195,36 +183,41 @@ public class MainActivityFragment extends Fragment
                         // Account for categories available only in Top but not in Latest. If Latest
                         // tab is missing in info, duplicate info from Top tab.
                         Cursor cursor = readDb.query(ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE,
-                                ArticleQuery.PROJECTION, "Category=?", selectionArgs, null, null, null);
+                                ArticleQuery.PROJECTION, this.getString(R.string.category_query),
+                                selectionArgs, null, null, null);
                         int count = cursor.getCount();
                         cursor.close();
                         if(count != 0) {
                             return new CursorLoader(getActivity(), top_articles_uri,
-                                    ArticleQuery.PROJECTION, "Category=?", selectionArgs, null);
+                                    ArticleQuery.PROJECTION, this.getString(R.string.category_query),
+                                    selectionArgs, null);
                         } else return new CursorLoader(getActivity(), latest_articles_uri,
-                                ArticleQuery.PROJECTION, "Category=?", selectionArgs, null);
+                                ArticleQuery.PROJECTION, this.getString(R.string.category_query),
+                                selectionArgs, null);
 
                     } else {
 
                         // If source selected from navigation drawer, set spinner selection to category,
                         // then query info based on source name provided.
                         Cursor cursor = readDb.query(ArticleContract.ArticleEntry.TOP_ARTICLE_TABLE,
-                                ArticleQuery.PROJECTION, "Source=?", sourceSelection, null, null, null);
+                                ArticleQuery.PROJECTION, this.getString(R.string.source_query),
+                                sourceSelection, null, null, null);
                         int count = cursor.getCount();
                         cursor.close();
                         if(count != 0) {
                             return new CursorLoader(getActivity(), top_articles_uri,
-                                    ArticleQuery.PROJECTION, "Source=?", sourceSelection, null);
+                                    ArticleQuery.PROJECTION, this.getString(R.string.source_query),
+                                    sourceSelection, null);
                         } else return new CursorLoader(getActivity(), latest_articles_uri,
-                                ArticleQuery.PROJECTION, "Source=?", sourceSelection, null);
+                                ArticleQuery.PROJECTION, this.getString(R.string.source_query),
+                                sourceSelection, null);
 
                     }
-
                 }
 
             case LATEST_ARTICLES:
 
-                if(spinnerSelection.equals("all")){
+                if(spinnerSelection.equals(this.getString(R.string.all))){
                     source_item = "";
                     return new CursorLoader(getActivity(), latest_articles_uri,
                             ArticleQuery.PROJECTION, null, null, null);
@@ -236,27 +229,33 @@ public class MainActivityFragment extends Fragment
                         // Account for categories available only in Latest but not in Top. If Top
                         // tab is missing in info, duplicate info from Latest tab.
                         Cursor cursor = readDb.query(ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE,
-                                ArticleQuery.PROJECTION, "Category=?", selectionArgs, null, null, null);
+                                ArticleQuery.PROJECTION, this.getString(R.string.category_query),
+                                selectionArgs, null, null, null);
                         int count = cursor.getCount();
                         cursor.close();
                         if(count != 0) {
                             return new CursorLoader(getActivity(), latest_articles_uri,
-                                    ArticleQuery.PROJECTION, "Category=?", selectionArgs, null);
+                                    ArticleQuery.PROJECTION, this.getString(R.string.category_query),
+                                    selectionArgs, null);
                         } else return new CursorLoader(getActivity(), top_articles_uri,
-                                ArticleQuery.PROJECTION, "Category=?", selectionArgs, null);
+                                ArticleQuery.PROJECTION,  this.getString(R.string.category_query),
+                                selectionArgs, null);
                     } else {
 
                         // If source selected from navigation drawer, set spinner selection to category,
                         // then query info based on source name provided.
                         Cursor cursor = readDb.query(ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE,
-                                ArticleQuery.PROJECTION, "Source=?", sourceSelection, null, null, null);
+                                ArticleQuery.PROJECTION, this.getString(R.string.source_query),
+                                sourceSelection, null, null, null);
                         int count = cursor.getCount();
                         cursor.close();
                         if(count != 0) {
                             return new CursorLoader(getActivity(), latest_articles_uri,
-                                    ArticleQuery.PROJECTION, "Source=?", sourceSelection, null);
+                                    ArticleQuery.PROJECTION, this.getString(R.string.source_query),
+                                    sourceSelection, null);
                         } else return new CursorLoader(getActivity(), top_articles_uri,
-                                ArticleQuery.PROJECTION, "Source=?", sourceSelection, null);
+                                ArticleQuery.PROJECTION, this.getString(R.string.source_query),
+                                sourceSelection, null);
                     }
                 }
             default:
@@ -268,7 +267,6 @@ public class MainActivityFragment extends Fragment
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mRecyclerView.setVisibility(View.VISIBLE);
 
-        Log.d(TAG, "onLoadFinished");
         updateNavAdapter();
 
         mCallback.setSyncFinished();
@@ -354,16 +352,18 @@ public class MainActivityFragment extends Fragment
         public void onReceive(Context context, Intent intent) {
             switch(category_id){
                 case TOP_ARTICLES:
-                    ArrayList<Article> s = intent.getParcelableArrayListExtra("GET_TOP_ARTICLES");
-                    if(s != null && isAdded()) {
-                        utils.insertIntoDb(s, "top");
+                    ArrayList<Article> articleArrayList = intent.getParcelableArrayListExtra
+                            (getString(R.string.get_top_articles));
+                    if(articleArrayList != null && isAdded()) {
+                        utils.insertIntoDb(articleArrayList, getString(R.string.top).toLowerCase());
                         startLoader(ID_TOP_ARTICLES_LOADER);
                     }
                     break;
                 case LATEST_ARTICLES:
-                    s = intent.getParcelableArrayListExtra("GET_LATEST_ARTICLES");
-                    if(s!= null && isAdded()){
-                        utils.insertIntoDb(s, "latest");
+                    articleArrayList = intent.getParcelableArrayListExtra
+                            (getString(R.string.get_latest_articles));
+                    if(articleArrayList!= null && isAdded()){
+                        utils.insertIntoDb(articleArrayList, getString(R.string.latest).toLowerCase());
                         startLoader(ID_LATEST_ARTICLES_LOADER);
                     }
                     break;

@@ -20,6 +20,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static org.hamcrest.Matchers.not;
 
+// Test assumes wifi/mobile connection
 public class SearchActivityBehaviourTest {
 
     private IdlingResource mIdlingResource;

@@ -68,8 +68,8 @@ public class SearchArticlesAdapter extends
                 url = mCursor.getString(ArticleQuery.URL);
             else
                 url = mCursor.getString(ArticleQuery.SEARCH_URL);
-            intent.putExtra("URL", url);
-            intent.setAction("Search");
+            intent.putExtra(mContext.getString(R.string.url), url);
+            intent.setAction(mContext.getString(R.string.search));
             mContext.startActivity(intent);
         }
     }

@@ -20,9 +20,9 @@ public class WidgetDataProvider implements RemoteViewsService.RemoteViewsFactory
 
     public static final String TAG = "WidgetDataProvider";
 
-    public WidgetDataProvider(Context context, Cursor cursor, int widgetId){
-        mCursor = cursor;
+    public WidgetDataProvider(Context context, Cursor cursor){
         mContext = context;
+        mCursor = cursor;
     }
 
     @Override
@@ -62,8 +62,8 @@ public class WidgetDataProvider implements RemoteViewsService.RemoteViewsFactory
             view.setTextViewText(R.id.widget_display_description, description);
 
             Intent intent = new Intent(mContext, SearchActivity.class);
-            intent.putExtra("URL", url);
-            intent.setAction("Browse");
+            intent.putExtra(mContext.getString(R.string.url), url);
+            intent.setAction(mContext.getString(R.string.browse));
             view.setOnClickFillInIntent(R.id.widget_display, intent);
 
             return view;

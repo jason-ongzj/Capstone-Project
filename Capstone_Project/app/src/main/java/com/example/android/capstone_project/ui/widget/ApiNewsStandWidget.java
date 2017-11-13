@@ -26,8 +26,8 @@ public class ApiNewsStandWidget extends AppWidgetProvider {
         String categoryValue = ApiNewsStandWidgetConfigureActivity.loadCategoryPref(context, appWidgetId);
         String sortByValue = ApiNewsStandWidgetConfigureActivity.loadSortByPref(context, appWidgetId);
 
-        intent.putExtra("Category", categoryValue);
-        intent.putExtra("SortBy", sortByValue);
+        intent.putExtra(context.getString(R.string.category), categoryValue);
+        intent.putExtra(context.getString(R.string.sortBy), sortByValue);
 
         intent.setData(Uri.fromParts("content", String.valueOf(appWidgetId), null));
 
@@ -41,7 +41,7 @@ public class ApiNewsStandWidget extends AppWidgetProvider {
 //        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
 //                activityIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 //
-//        views.setOnClickPendingIntent(R.id.configure_options, pendingIntent);
+//        views.setOnClickPendingIntent(R.id.widget_config, pendingIntent);
 
         Intent appIntent = new Intent(context, WebViewActivity.class);
         PendingIntent appPendingIntent = PendingIntent.getActivity(context, 0,

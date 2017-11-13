@@ -29,8 +29,6 @@ import com.example.android.capstone_project.R;
 import com.example.android.capstone_project.data.ArticleContract;
 import com.example.android.capstone_project.data.ArticleDbHelper;
 import com.example.android.capstone_project.data.DbUtils;
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.Tracker;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import butterknife.BindView;
@@ -59,9 +57,8 @@ public class SearchActivity extends AppCompatActivity
     private Cursor mCursor;
     private ArticleDbHelper helper;
     private DbUtils utils;
-    private Tracker mTracker;
-    private static GoogleAnalytics sAnalytics;
     private FirebaseAnalytics firebaseAnalytics;
+    private Context context;
 
     private int SEARCH_ACTIVITY = 1;
     private SearchHistoryAdapter mSearchHistoryAdapter;
@@ -86,11 +83,10 @@ public class SearchActivity extends AppCompatActivity
 
         helper = new ArticleDbHelper(this);
         utils = new DbUtils(helper);
+        context = this;
 
         firebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
-//        sAnalytics = GoogleAnalytics.getInstance(this);
-//        mTracker = sAnalytics.newTracker(R.xml.global_tracker);
         editText.setSingleLine(true);
 
         clearHistoryView.setOnClickListener(new View.OnClickListener() {
@@ -152,9 +148,10 @@ public class SearchActivity extends AppCompatActivity
 
                     searchHistoryView.setVisibility(View.INVISIBLE);
 
+                    // Firebase Analytics
                     Bundle bundle = new Bundle();
-                    bundle.putString("search_term", editText.getText().toString());
-                    firebaseAnalytics.logEvent("Search", bundle);
+                    bundle.putString(context.getString(R.string.search_term), editText.getText().toString());
+                    firebaseAnalytics.logEvent(context.getString(R.string.search), bundle);
 
                     return true;
                 } else if (i == EditorInfo.IME_FLAG_NAVIGATE_PREVIOUS) {
@@ -170,6 +167,17 @@ public class SearchActivity extends AppCompatActivity
                 getSupportLoaderManager().restartLoader(ID_SEARCH_ARTICLES, null, SearchActivity.this);
                 editText.setCursorVisible(true);
                 searchHistoryView.setVisibility(View.VISIBLE);
+                return false;
+            }
+        });
+
+        searchHistoryView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                searchHistoryView.setVisibility(View.INVISIBLE);
+                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                editText.setCursorVisible(false);
                 return false;
             }
         });

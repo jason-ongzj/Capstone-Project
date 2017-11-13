@@ -91,7 +91,8 @@ public class GetArticlesListService extends IntentService {
             Observable.defer(() -> {
                 try {
                     Log.d(TAG, "getArticles: " + source.getId());
-                    return newsAPI.getArticlesObservable(source.getId(), input, api_Key)
+                    return newsAPI.getArticlesObservable(source.getId(), input,
+                            getString(R.string.api_key))
                             .flatMap(newsAPIArticles ->
                                     Observable.from(newsAPIArticles.getArticles())
                             )
@@ -135,11 +136,11 @@ public class GetArticlesListService extends IntentService {
                             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(localIntent);
                             count = 0;
                         }
-                        Log.d(TAG, "onCompleted: " + Thread.activeCount());
                     }
 
                     @Override
                     public void onError(Throwable e) {
+                        Log.d(TAG, "onError: " + e);
                     }
 
                     @Override

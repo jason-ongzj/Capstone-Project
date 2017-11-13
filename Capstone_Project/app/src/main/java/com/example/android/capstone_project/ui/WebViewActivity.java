@@ -24,7 +24,7 @@ public class WebViewActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         if(getIntent().getExtras() != null){
-            url = getIntent().getExtras().getString("URL");
+            url = getIntent().getExtras().getString(this.getString(R.string.url));
             webView.getSettings().setJavaScriptEnabled(true);
             webView.setWebViewClient(new WebViewClient());
             webView.loadUrl(url);
@@ -39,7 +39,7 @@ public class WebViewActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(getIntent().getAction().equals("Search")) {
+        if(getIntent().getAction().equals(this.getString(R.string.search))) {
             super.onBackPressed();
         } else {
             moveTaskToBack(true);

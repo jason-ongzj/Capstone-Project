@@ -10,6 +10,7 @@
     <string name="get_latest_articles">GET_LATEST_ARTICLES</string>
     <string name="appwidget_text">EXAMPLE</string>
 
+    <string name="all">all</string>
     <string name="business">Business</string>
     <string name="entertainment">Entertainment</string>
     <string name="gaming">Gaming</string>
@@ -19,6 +20,10 @@
     <string name="science_and_nature">Science-and-Nature</string>
     <string name="sport">Sport</string>
     <string name="technology">Technology</string>
+    <string name="science">science</string>
+
+    <string name="source_query">Source=?</string>
+    <string name="category_query">Category=?</string>
 
     <string name="category">Category</string>
     <string name="sortBy">Sort By</string>
@@ -34,5 +39,17 @@
     <string name="placeholder_string">Lorem ipsum</string>
 
     <string name="banner_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+
+    <string name="url">URL</string>
+    <string name="search">Search</string>
+    <string name="search_term">search_term</string>
+    <string name="browse">browse</string>
+
+    <string name="categoryId">Category_Id</string>
+
+    <string name="api_news_stand">API News Stand</string>
+    <string name="powered_by_news_api">Powered by News API</string>
+
+    <string name="api_key">4bea82e302ea46d188f106ffd0121590</string>
 
 </resources>
