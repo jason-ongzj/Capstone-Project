@@ -1,4 +1,4 @@
-package com.example.android.capstone_project.http;
+package com.example.android.capstone_project.others;
 
 import android.support.annotation.Nullable;
 import android.support.test.espresso.IdlingResource;
@@ -11,8 +11,6 @@ public class GetArticlesIdlingResource implements IdlingResource {
     private volatile ResourceCallback mCallback;
 
     private MainActivity activity;
-    // Idleness is controlled with this boolean.
-//    private AtomicBoolean mIsIdleNow = new AtomicBoolean(false);
 
     public GetArticlesIdlingResource(MainActivity activity){
         this.activity = activity;

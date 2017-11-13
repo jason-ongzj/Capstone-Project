@@ -29,6 +29,9 @@ import com.example.android.capstone_project.R;
 import com.example.android.capstone_project.data.ArticleContract;
 import com.example.android.capstone_project.data.ArticleDbHelper;
 import com.example.android.capstone_project.data.DbUtils;
+import com.google.android.gms.analytics.GoogleAnalytics;
+import com.google.android.gms.analytics.Tracker;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -56,6 +59,9 @@ public class SearchActivity extends AppCompatActivity
     private Cursor mCursor;
     private ArticleDbHelper helper;
     private DbUtils utils;
+    private Tracker mTracker;
+    private static GoogleAnalytics sAnalytics;
+    private FirebaseAnalytics firebaseAnalytics;
 
     private int SEARCH_ACTIVITY = 1;
     private SearchHistoryAdapter mSearchHistoryAdapter;
@@ -81,6 +87,10 @@ public class SearchActivity extends AppCompatActivity
         helper = new ArticleDbHelper(this);
         utils = new DbUtils(helper);
 
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this);
+
+//        sAnalytics = GoogleAnalytics.getInstance(this);
+//        mTracker = sAnalytics.newTracker(R.xml.global_tracker);
         editText.setSingleLine(true);
 
         clearHistoryView.setOnClickListener(new View.OnClickListener() {
@@ -141,6 +151,11 @@ public class SearchActivity extends AppCompatActivity
                     mRecyclerView.setLayoutManager(linearLayoutManager);
 
                     searchHistoryView.setVisibility(View.INVISIBLE);
+
+                    Bundle bundle = new Bundle();
+                    bundle.putString("search_term", editText.getText().toString());
+                    firebaseAnalytics.logEvent("Search", bundle);
+
                     return true;
                 } else if (i == EditorInfo.IME_FLAG_NAVIGATE_PREVIOUS) {
                     editText.setCursorVisible(false);

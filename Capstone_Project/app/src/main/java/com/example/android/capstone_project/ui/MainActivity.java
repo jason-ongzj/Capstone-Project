@@ -35,8 +35,8 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.android.capstone_project.R;
-import com.example.android.capstone_project.http.GetArticlesIdlingResource;
-import com.example.android.capstone_project.http.NetworkChangeReceiver;
+import com.example.android.capstone_project.others.GetArticlesIdlingResource;
+import com.example.android.capstone_project.others.NetworkChangeReceiver;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 
@@ -153,7 +153,6 @@ public class MainActivity extends AppCompatActivity
                 android.R.layout.simple_list_item_activated_1, spinnerItems);
 
         spinner.setAdapter(spinnerAdapter);
-//        spinner.setVisibility(View.INVISIBLE);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
@@ -188,7 +187,6 @@ public class MainActivity extends AppCompatActivity
                 .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
                 .build();
         adView.loadAd(adRequest);
-
     }
 
     private void promptNetworkConnection(){

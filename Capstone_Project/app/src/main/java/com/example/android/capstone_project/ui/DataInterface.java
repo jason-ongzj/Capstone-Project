@@ -5,7 +5,7 @@ import android.view.MenuItem;
 import android.widget.ListView;
 import android.widget.Spinner;
 
-import com.example.android.capstone_project.http.NetworkChangeReceiver;
+import com.example.android.capstone_project.others.NetworkChangeReceiver;
 
 interface DataInterface {
     ListView getListView();

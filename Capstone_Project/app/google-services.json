@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "626703794659",
+    "firebase_url": "https://api-news-stand.firebaseio.com",
+    "project_id": "api-news-stand",
+    "storage_bucket": "api-news-stand.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:626703794659:android:1d5baef166dcce0b",
+        "android_client_info": {
+          "package_name": "com.example.android.capstone_project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "626703794659-hn5lu4sblnh4br585k1h8eg4n9m2g7kr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDh6iO1wr0ANToh08uUCWgzg0BMpWVFgnU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
