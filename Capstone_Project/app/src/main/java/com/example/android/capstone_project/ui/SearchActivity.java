@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -15,9 +16,11 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -65,6 +68,12 @@ public class SearchActivity extends AppCompatActivity
 
     private int ID_SEARCH_ARTICLES = 289;
 
+    private boolean editTextMode = true;
+    private String previousSearchTerm = "";
+    private Parcelable state;
+
+    public static final String TAG = "SearchActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,7 +117,6 @@ public class SearchActivity extends AppCompatActivity
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
             }
 
             @Override
@@ -120,7 +128,6 @@ public class SearchActivity extends AppCompatActivity
 
             @Override
             public void afterTextChanged(Editable editable) {
-
             }
         });
 
@@ -128,6 +135,9 @@ public class SearchActivity extends AppCompatActivity
             @Override
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if(i == EditorInfo.IME_ACTION_SEARCH){
+                    // Set previous search term for saveInstanceState;
+                    previousSearchTerm = editText.getText().toString();
+
                     InputMethodManager inm = (InputMethodManager) textView.getContext()
                             .getSystemService(Context.INPUT_METHOD_SERVICE);
                     inm.hideSoftInputFromWindow(textView.getWindowToken(), 0);
@@ -164,6 +174,7 @@ public class SearchActivity extends AppCompatActivity
         editText.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
+                editTextMode = true;
                 getSupportLoaderManager().restartLoader(ID_SEARCH_ARTICLES, null, SearchActivity.this);
                 editText.setCursorVisible(true);
                 searchHistoryView.setVisibility(View.VISIBLE);
@@ -174,24 +185,75 @@ public class SearchActivity extends AppCompatActivity
         searchHistoryView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
+                editTextMode = false;
                 searchHistoryView.setVisibility(View.INVISIBLE);
                 InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                 editText.setCursorVisible(false);
+                if(mCursor != null)
+                    mCursor.close();
                 return false;
             }
         });
+
+        if(savedInstanceState != null){
+            editTextMode = savedInstanceState.getBoolean("editTextMode");
+            previousSearchTerm = savedInstanceState.getString("previousSearchTerm");
+            state = savedInstanceState.getParcelable("layoutManagerRestore");
+
+            Log.d(TAG, "onCreate: " + editTextMode);
+
+            if(editTextMode){
+                editText.setCursorVisible(true);
+                searchHistoryView.setVisibility(View.VISIBLE);
+                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+            } else {
+                editText.setCursorVisible(false);
+                searchHistoryView.setVisibility(View.INVISIBLE);
+                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+            }
+
+            if(!previousSearchTerm.equals("")){
+
+                mCursor = utils.queryCombinedArticleLists(previousSearchTerm);
+                LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+                SearchArticlesAdapter adapter = new SearchArticlesAdapter(this, SEARCH_ACTIVITY);
+                adapter.setCursor(mCursor);
+                mRecyclerView.setAdapter(adapter);
+                mRecyclerView.setLayoutManager(linearLayoutManager);
+                mRecyclerView.getLayoutManager().onRestoreInstanceState(state);
+            }
+
+            getSupportLoaderManager().restartLoader(ID_SEARCH_ARTICLES, null, this);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean("editTextMode", editTextMode);
+        outState.putString("previousSearchTerm", previousSearchTerm);
+        if(mRecyclerView.getLayoutManager() != null){
+            outState.putParcelable("layoutManagerRestore", mRecyclerView.
+                    getLayoutManager().onSaveInstanceState());
+        }
+        super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(mCursor != null)
+            mCursor.close();
     }
 
     @Override
     public void onHistoryItemClicked(String history_item) {
         editText.setText(history_item);
         editText.setCursorVisible(false);
+        editTextMode = false;
+
+        previousSearchTerm = editText.getText().toString();
+
         InputMethodManager inputManager = (InputMethodManager) getSystemService
                 (Context.INPUT_METHOD_SERVICE);
         inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),

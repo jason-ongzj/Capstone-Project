@@ -14,10 +14,12 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,7 +53,9 @@ public class MainActivityFragment extends Fragment
     private DataInterface mCallback;
 
     private static String source_item = "";
-    private static String current_source;
+
+    private boolean onRotate = false;
+    private Parcelable state;
 
     private Cursor sourceCursor;
 
@@ -59,6 +63,7 @@ public class MainActivityFragment extends Fragment
     private SearchArticlesAdapter mAdapter;
 
     private MyResponseReceiver responseReceiver;
+    private LinearLayoutManager linearLayoutManager;
 
     private ArticleDbHelper helper;
     private String spinnerSelection = "all";
@@ -113,6 +118,48 @@ public class MainActivityFragment extends Fragment
         }
     }
 
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if(savedInstanceState != null) {
+            onRotate = true;
+            source_item = savedInstanceState.getString("source_item");
+            spinnerSelection = savedInstanceState.getString("spinnerSelection");
+//            Log.d(TAG, "onActivityCreated: " + source_item);
+
+            state = savedInstanceState.getParcelable("layoutManagerRestore");
+
+            category_id = savedInstanceState.getInt(getString(R.string.categoryId));
+
+            // If intentService is running, do not start loading from database on rotation.
+            if(!mCallback.getRefreshStatus()) {
+                switch (category_id) {
+                    case TOP_ARTICLES:
+                        startLoader(ID_TOP_ARTICLES_LOADER);
+                        break;
+                    case LATEST_ARTICLES:
+                        startLoader(ID_LATEST_ARTICLES_LOADER);
+                        break;
+                }
+            }
+        } else {
+            spinnerSelection = ((MainActivity) getActivity()).getSpinnerSelection();
+            source_item = mCallback.getSourceName();
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt(getString(R.string.categoryId), category_id);
+        outState.putString("source_item", source_item);
+        outState.putString("spinnerSelection", spinnerSelection);
+        if(mRecyclerView.getLayoutManager() != null) {
+            outState.putParcelable("layoutManagerRestore", mRecyclerView.getLayoutManager().onSaveInstanceState());
+        }
+
+        super.onSaveInstanceState(outState);
+    }
+
     public void getArticlesList(Context context){
         ConnectivityManager cm =
                 (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -149,8 +196,6 @@ public class MainActivityFragment extends Fragment
         View mRootView = inflater.inflate(R.layout.fragment_main_activity, container, false);
         ButterKnife.bind(this, mRootView);
 
-        spinnerSelection = ((MainActivity) getActivity()).getSpinnerSelection();
-
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setItemViewCacheSize(10);
         mRecyclerView.setDrawingCacheEnabled(true);
@@ -159,12 +204,15 @@ public class MainActivityFragment extends Fragment
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        hideRecyclerView();
 
         SQLiteDatabase readDb = helper.getReadableDatabase();
-        spinnerSelection = ((MainActivity) getActivity()).getSpinnerSelection();
 
         String[] sourceSelection = new String[] {source_item};
         String[] selectionArgs = new String[] {spinnerSelection};
+        if(source_item != null && source_item.equals(""))
+        Log.d(TAG, "onCreateLoader1 : " + source_item);
+        else Log.d(TAG, "onCreateLoader2: " + source_item);
 
         Uri top_articles_uri = ArticleContract.ArticleEntry.TOP_URI;
         Uri latest_articles_uri = ArticleContract.ArticleEntry.LATEST_URI;
@@ -267,13 +315,18 @@ public class MainActivityFragment extends Fragment
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mRecyclerView.setVisibility(View.VISIBLE);
 
-        updateNavAdapter();
+        // Update listView when refreshed
+        if(mCallback.getRefreshStatus()) {
+            updateNavAdapter();
+        }
 
         mCallback.setSyncFinished();
         mCallback.setRefreshStatusFalse();
+
         mCallback.hideProgressBar();
 
         // Prevent spammed refreshes, enable only when data is completely fetched from server
+        if(mCallback.getRefreshListButton() != null)
         mCallback.getRefreshListButton().setEnabled(true);
 
         // Check if network receiver was registered, and if so unregister it
@@ -282,21 +335,22 @@ public class MainActivityFragment extends Fragment
             mCallback.setNetworkChangeReceiverFalse();
         }
 
-        // Save current source for config reset. "if" condition is required since there are two
-        // fragments tracking a single variable, else current_source will be "".
-        if(!source_item.equals("")) {
-            current_source = source_item;
-        }
-
-        // Reset source_item variable after every search, otherwise subsequent searches are limited
-        // in scope
-        source_item = "";
-
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+        linearLayoutManager = new LinearLayoutManager(getActivity());
         mAdapter = new SearchArticlesAdapter(getActivity(), MAIN_ACTIVITY);
         mAdapter.setCursor(cursor);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(linearLayoutManager);
+
+        // Restore rotation
+        if(state!= null && onRotate){
+            updateNavAdapter();
+            mRecyclerView.getLayoutManager().onRestoreInstanceState(state);
+            mCallback.updateRotationStatus();
+        }
+
+        Log.d(TAG, "onLoadFinished: " + mCallback.getRotationStatus());
+//        state = null;
+        onRotate = false;
     }
 
     @Override
@@ -311,19 +365,17 @@ public class MainActivityFragment extends Fragment
     }
 
     private void updateNavAdapter(){
-        if(mCallback.getRefreshStatus()) {
-            ListView listView = mCallback.getListView();
+        ListView listView = mCallback.getListView();
 
-            if (sourceCursor != null) {
-                sourceCursor.close();
-            }
-
-            sourceCursor = utils.querySources();
-            NavigationAdapter navAdapter = new NavigationAdapter(getActivity(), this);
-            navAdapter.setCursor(sourceCursor);
-            listView.setAdapter(navAdapter);
-            listView.setVisibility(View.VISIBLE);
+        if (sourceCursor != null) {
+            sourceCursor.close();
         }
+
+        sourceCursor = utils.querySources();
+        NavigationAdapter navAdapter = new NavigationAdapter(getActivity(), this);
+        navAdapter.setCursor(sourceCursor);
+        listView.setAdapter(navAdapter);
+        listView.setVisibility(View.VISIBLE);
     }
 
     public void hideRecyclerView(){
@@ -337,11 +389,13 @@ public class MainActivityFragment extends Fragment
     // Accessed from broadcast receiver. Using restart loader will ensure there will always be 2
     // loaders, while initLoader will create endless amount of loaders.
     public void startLoader(int loaderID){
+        Log.d(TAG, "startLoader: ");
         getLoaderManager().restartLoader(loaderID, null, this);
     }
 
     // Accessed from MainActivity to reload when spinner selection changes
     public void restartLoader(int loaderID, String itemSelected){
+        Log.d(TAG, "restartLoader: ");
         spinnerSelection = itemSelected;
         getLoaderManager().restartLoader(loaderID, null, this);
         mAdapter.notifyDataSetChanged();

@@ -9,6 +9,7 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,6 +23,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -74,10 +76,13 @@ public class MainActivity extends AppCompatActivity
 
     private String spinnerSelection = "all";
     private String source_item = "";
+    private String prev_source_item;
 
     private boolean syncFinished = false;
     private boolean isRefreshed = true;
     private boolean isNetworkChangeReceiverSet = false;
+    private boolean isRotated = false;
+    private Parcelable listViewState;
 
     private ConnectivityManager cm;
     private NetworkInfo activeNetwork;
@@ -155,6 +160,17 @@ public class MainActivity extends AppCompatActivity
                 android.R.layout.simple_list_item_activated_1, spinnerItems);
 
         spinner.setAdapter(spinnerAdapter);
+
+        if(savedInstanceState != null){
+            source_item = savedInstanceState.getString("source_item");
+            Log.d(TAG, "onCreateSavedInstanceState: " + source_item);
+            spinnerSelection = savedInstanceState.getString("spinnerSelection");
+            isRefreshed = savedInstanceState.getBoolean("isRefreshed");
+//            prev_source_item = source_item;
+            listViewState = savedInstanceState.getParcelable("listview");
+            isRotated = true;
+        }
+
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
@@ -165,7 +181,22 @@ public class MainActivity extends AppCompatActivity
                         spinnerSelection = getString(R.string.science_and_nature).toLowerCase();
                     }
                     Toast.makeText(MainActivity.this, spinnerSelection, Toast.LENGTH_SHORT).show();
-                    updateFragments(source_item);
+
+                    // If no rotation occurs, update fragment. Else skip update.
+                    if(!isRotated) {
+                        Log.d(TAG, "onItemSelected: rotated behaviour should not be seen" + isRotated);
+                        updateFragments(source_item);
+                    } else {
+                        if(listViewState != null)
+                            listView.onRestoreInstanceState(listViewState);
+                    }
+                    isRotated = false;
+
+                    // Use another variable to keep track of current source chosen
+                    prev_source_item = source_item;
+
+                    // Source item needs to be kept empty for all times, so as to react to changes due
+                    // to nav item clicks as well as spinner item clicks
                     source_item = "";
                 }
             }
@@ -175,6 +206,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        // Test network connection
         cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
 
         activeNetwork = cm.getActiveNetworkInfo();
@@ -231,7 +263,6 @@ public class MainActivity extends AppCompatActivity
             // Fragment update cannot occur if category of selected source is same as shown in
             // spinner item. Therefore, do a manual update.
             updateFragments(source);
-            source_item = "";
         } else {
             // If source category is different from selected category from spinner, update via
             // spinner itemSelected listener.
@@ -270,6 +301,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        outState.putString("spinnerSelection", spinnerSelection);
+        outState.putString("source_item", prev_source_item);
+        outState.putBoolean("isRefreshed", isRefreshed);
+        outState.putParcelable("listview", listView.onSaveInstanceState());
         super.onSaveInstanceState(outState);
     }
 
@@ -279,23 +314,8 @@ public class MainActivity extends AppCompatActivity
         if(drawer != null){
             if (drawer.isDrawerOpen(GravityCompat.START)) {
                 drawer.closeDrawer(GravityCompat.START);
-            }
-        }
-    }
-
-    private void quitAlertDialog(){
-        AlertDialog alert = new AlertDialog.Builder(this)
-                .setMessage("Are you sure you want to exit?")
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        MainActivity.this.finish();
-                    }
-                })
-                .setNegativeButton("No", null)
-                .show();
-        alert.getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        TextView messageText = (TextView) alert.findViewById(android.R.id.message);
-        messageText.setTextDirection(View.TEXT_DIRECTION_LOCALE);
+            } else super.onBackPressed();
+        } else super.onBackPressed();
     }
 
     @Override
@@ -336,9 +356,13 @@ public class MainActivity extends AppCompatActivity
             } else {
                 promptNetworkConnection();
             }
-
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public String getSourceName() {
+        return source_item;
     }
 
     // Call when network receiver is registered
@@ -359,7 +383,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     // Called when spinner item or nav item selected
-    @Override
     public void updateFragments(String source) {
         Fragment fragment_1 = mPagerAdapter.getRegisteredFragment(0);
         Fragment fragment_2 = mPagerAdapter.getRegisteredFragment(1);
@@ -404,6 +427,16 @@ public class MainActivity extends AppCompatActivity
     @Override
     public MenuItem getRefreshListButton() {
         return refreshList;
+    }
+
+    @Override
+    public void updateRotationStatus() {
+        isRotated = true;
+    }
+
+    @Override
+    public boolean getRotationStatus() {
+        return isRotated;
     }
 
     @Override

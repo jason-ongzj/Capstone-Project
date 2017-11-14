@@ -10,7 +10,7 @@ import com.example.android.capstone_project.others.NetworkChangeReceiver;
 interface DataInterface {
     ListView getListView();
     void closeDrawer();
-    void updateFragments(String source);
+//    void updateFragments(String source);
     void onSourceItemClicked(String source, String category);
     Spinner getSpinner();
     ActionBarDrawerToggle getToggle();
@@ -22,4 +22,7 @@ interface DataInterface {
     void setNetworkChangeReceiverFalse();
     NetworkChangeReceiver getNetworkChangeReceiver();
     void hideProgressBar();
+    String getSourceName();
+    void updateRotationStatus();
+    boolean getRotationStatus();
 }
