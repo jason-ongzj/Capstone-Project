@@ -18,6 +18,7 @@ public class NavigationAdapter extends BaseAdapter {
 
     private Cursor mCursor;
     private Context mContext;
+    private int mSelection = 999;
 
     @Nullable
     @BindView(R.id.nav_list_tv)
@@ -26,12 +27,16 @@ public class NavigationAdapter extends BaseAdapter {
     private final OnClickHandler mClickHandler;
 
     public interface OnClickHandler{
-        void onSourceItemClicked(String source, String category);
+        void onSourceItemClicked(String source, String category, View view, int position);
     }
 
     public NavigationAdapter(Context context, OnClickHandler clickHandler){
         mContext = context;
         mClickHandler = clickHandler;
+    }
+
+    public void setSelectedItem(int position){
+        mSelection = position;
     }
 
     public void setCursor(Cursor cursor){
@@ -59,6 +64,9 @@ public class NavigationAdapter extends BaseAdapter {
         mCursor.moveToPosition(position);
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         view = inflater.inflate(R.layout.nav_list_item, null);
+        if(mSelection == position){
+            view.setBackgroundColor(mContext.getResources().getColor(R.color.color_light_blue));
+        }
         ButterKnife.bind(this, view);
         final String source = mCursor.getString(0);
         final String category = mCursor.getString(1);
@@ -67,7 +75,9 @@ public class NavigationAdapter extends BaseAdapter {
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mClickHandler.onSourceItemClicked(source, category);
+                mClickHandler.onSourceItemClicked(source, category, view, position);
+                setSelectedItem(position);
+                notifyDataSetChanged();
             }
         });
         return view;

@@ -190,8 +190,7 @@ public class SearchActivity extends AppCompatActivity
                 InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                 editText.setCursorVisible(false);
-                if(mCursor != null)
-                    mCursor.close();
+                mCursor = null;
                 return false;
             }
         });
@@ -199,7 +198,7 @@ public class SearchActivity extends AppCompatActivity
         if(savedInstanceState != null){
             editTextMode = savedInstanceState.getBoolean("editTextMode");
             previousSearchTerm = savedInstanceState.getString("previousSearchTerm");
-            state = savedInstanceState.getParcelable("layoutManagerRestore");
+            state = savedInstanceState.getParcelable(getString(R.string.layoutManagerRestore));
 
             Log.d(TAG, "onCreate: " + editTextMode);
 
@@ -233,7 +232,7 @@ public class SearchActivity extends AppCompatActivity
         outState.putBoolean("editTextMode", editTextMode);
         outState.putString("previousSearchTerm", previousSearchTerm);
         if(mRecyclerView.getLayoutManager() != null){
-            outState.putParcelable("layoutManagerRestore", mRecyclerView.
+            outState.putParcelable(getString(R.string.layoutManagerRestore), mRecyclerView.
                     getLayoutManager().onSaveInstanceState());
         }
         super.onSaveInstanceState(outState);

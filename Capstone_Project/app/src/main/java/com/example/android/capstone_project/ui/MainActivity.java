@@ -9,7 +9,6 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -23,7 +22,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -67,8 +65,6 @@ public class MainActivity extends AppCompatActivity
     private String[] spinnerItems = new String[] {"All", "Business", "Entertainment", "Gaming", "General",
             "Music", "Politics","Science", "Sport", "Technology"};
 
-    public static final String TAG = "MainActivity";
-
     private ViewPager mPager;
     private MenuItem refreshList;
     private MyPagerAdapter mPagerAdapter;
@@ -82,13 +78,14 @@ public class MainActivity extends AppCompatActivity
     private boolean isRefreshed = true;
     private boolean isNetworkChangeReceiverSet = false;
     private boolean isRotated = false;
-    private Parcelable listViewState;
+    private boolean isSourceItemClicked = false;
 
     private ConnectivityManager cm;
     private NetworkInfo activeNetwork;
     private NetworkChangeReceiver networkChangeReceiver;
 
     private GetArticlesIdlingResource mIdlingResource;
+    private int mListViewSelectedItem = 999;
 
     private static final int ID_TOP_ARTICLES_LOADER = 156;
     private static final int ID_LATEST_ARTICLES_LOADER = 249;
@@ -137,6 +134,8 @@ public class MainActivity extends AppCompatActivity
 
         mPager = (ViewPager) findViewById(R.id.pager);
         mPager.setAdapter(mPagerAdapter);
+
+        // No re-creation of fragments
         mPager.setOffscreenPageLimit(1);
 
         mPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
@@ -156,18 +155,18 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        final ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_list_item_activated_1, spinnerItems);
+        final ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_activated_1, spinnerItems){
+
+        };
 
         spinner.setAdapter(spinnerAdapter);
 
         if(savedInstanceState != null){
-            source_item = savedInstanceState.getString("source_item");
-            Log.d(TAG, "onCreateSavedInstanceState: " + source_item);
-            spinnerSelection = savedInstanceState.getString("spinnerSelection");
-            isRefreshed = savedInstanceState.getBoolean("isRefreshed");
-//            prev_source_item = source_item;
-            listViewState = savedInstanceState.getParcelable("listview");
+            source_item = savedInstanceState.getString(getString(R.string.source_item));
+            spinnerSelection = savedInstanceState.getString(getString(R.string.spinnerSelection));
+            isRefreshed = savedInstanceState.getBoolean(getString(R.string.isRefreshed));
+            mListViewSelectedItem = savedInstanceState.getInt(getString(R.string.listViewSelected));
             isRotated = true;
         }
 
@@ -182,15 +181,18 @@ public class MainActivity extends AppCompatActivity
                     }
                     Toast.makeText(MainActivity.this, spinnerSelection, Toast.LENGTH_SHORT).show();
 
-                    // If no rotation occurs, update fragment. Else skip update.
-                    if(!isRotated) {
-                        Log.d(TAG, "onItemSelected: rotated behaviour should not be seen" + isRotated);
+                    // Only activate from user spinner selection
+                    if(!isRotated && !isSourceItemClicked) {
                         updateFragments(source_item);
-                    } else {
-                        if(listViewState != null)
-                            listView.onRestoreInstanceState(listViewState);
+                        NavigationAdapter adapter = (NavigationAdapter) listView.getAdapter();
+                        mListViewSelectedItem = 999;
+                        adapter.setSelectedItem(mListViewSelectedItem);
+                        adapter.notifyDataSetChanged();
                     }
+
+                    // Reset rotation state and item click state
                     isRotated = false;
+                    isSourceItemClicked = false;
 
                     // Use another variable to keep track of current source chosen
                     prev_source_item = source_item;
@@ -208,44 +210,19 @@ public class MainActivity extends AppCompatActivity
 
         // Test network connection
         cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-
         activeNetwork = cm.getActiveNetworkInfo();
         boolean isConnected = activeNetwork != null &&
                 activeNetwork.isConnectedOrConnecting();
         networkChangeReceiver = new NetworkChangeReceiver();
-
         if(!isConnected){
             promptNetworkConnection();
         }
+
+        // Admob
         AdRequest adRequest = new AdRequest.Builder()
                 .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
                 .build();
         adView.loadAd(adRequest);
-    }
-
-    private void promptNetworkConnection(){
-        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        registerReceiver(networkChangeReceiver, filter);
-        isNetworkChangeReceiverSet = true;
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Please connect to the Internet.")
-                .setPositiveButton("Connect", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        startActivityForResult(new Intent(Settings.ACTION_WIFI_SETTINGS), 999);
-                        dialog.dismiss();
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.dismiss();
-                    }
-                });
-        AlertDialog alert = builder.create();
-        alert.show();
-        alert.getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-        TextView messageText = (TextView) alert.findViewById(android.R.id.message);
-        messageText.setTextDirection(View.TEXT_DIRECTION_LOCALE);
     }
 
     @Override
@@ -256,66 +233,24 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onSourceItemClicked(String source, String category) {
-        source_item = source;
-        isRefreshed = false;
-        if(spinnerSelection.equals(category)){
-            // Fragment update cannot occur if category of selected source is same as shown in
-            // spinner item. Therefore, do a manual update.
-            updateFragments(source);
-        } else {
-            // If source category is different from selected category from spinner, update via
-            // spinner itemSelected listener.
-            switch (category) {
-                case "business":
-                    spinner.setSelection(SPINNER_BUSINESS);
-                    break;
-                case "entertainment":
-                    spinner.setSelection(SPINNER_ENTERTAINMENT);
-                    break;
-                case "gaming":
-                    spinner.setSelection(SPINNER_GAMING);
-                    break;
-                case "general":
-                    spinner.setSelection(SPINNER_GENERAL);
-                    break;
-                case "music":
-                    spinner.setSelection(SPINNER_MUSIC);
-                    break;
-                case "politics":
-                    spinner.setSelection(SPINNER_POLITICS);
-                    break;
-                case "science-and-nature":
-                    spinner.setSelection(SPINNER_SCIENCE_NATURE);
-                    break;
-                case "sport":
-                    spinner.setSelection(SPINNER_SPORT);
-                    break;
-                case "technology":
-                    spinner.setSelection(SPINNER_TECHNOLOGY);
-                    break;
-            }
-        }
-        closeDrawer();
-    }
-
-    @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putString("spinnerSelection", spinnerSelection);
-        outState.putString("source_item", prev_source_item);
-        outState.putBoolean("isRefreshed", isRefreshed);
-        outState.putParcelable("listview", listView.onSaveInstanceState());
+        outState.putString(getString(R.string.spinnerSelection), spinnerSelection);
+        outState.putString(getString(R.string.source_item), prev_source_item);
+        outState.putBoolean(getString(R.string.isRefreshed), isRefreshed);
+        outState.putInt(getString(R.string.listViewSelected), mListViewSelectedItem);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onBackPressed() {
-        // Phone
+        // Phone only
         if(drawer != null){
             if (drawer.isDrawerOpen(GravityCompat.START)) {
                 drawer.closeDrawer(GravityCompat.START);
             } else super.onBackPressed();
-        } else super.onBackPressed();
+        } else
+            // For tablet layout
+            super.onBackPressed();
     }
 
     @Override
@@ -360,26 +295,36 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public String getSourceName() {
-        return source_item;
+    public boolean onNavigationItemSelected(MenuItem item) {
+        closeDrawer();
+        return true;
     }
 
-    // Call when network receiver is registered
-    @Override
-    public boolean isNetworkChangeReceiverSet() {
-        return isNetworkChangeReceiverSet;
-    }
+    private void promptNetworkConnection(){
+        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkChangeReceiver, filter);
+        isNetworkChangeReceiverSet = true;
 
-    // Call after fragment cursor loading is finished
-    @Override
-    public void setNetworkChangeReceiverFalse() {
-        isNetworkChangeReceiverSet = false;
-    }
-
-    @Override
-    public NetworkChangeReceiver getNetworkChangeReceiver() {
-        return networkChangeReceiver;
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Please connect to the Internet.")
+                .setPositiveButton("Connect", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        startActivityForResult(new Intent(Settings.ACTION_WIFI_SETTINGS), 999);
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.dismiss();
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
+        alert.getWindow().getDecorView().setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        TextView messageText = (TextView) alert.findViewById(android.R.id.message);
+        messageText.setTextDirection(View.TEXT_DIRECTION_LOCALE);
     }
 
     // Called when spinner item or nav item selected
@@ -397,23 +342,67 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onItemClicked(String source, String category) {
+        source_item = source;
+        isRefreshed = false;
+        // Decouple item click from spinner selection. Only link between adapter item and spinner
+        // is that onClick changes the display of spinner selection
+        isSourceItemClicked = true;
+        spinnerSelection = category;
+        switch (category) {
+            case "business":
+                spinner.setSelection(SPINNER_BUSINESS);
+                break;
+            case "entertainment":
+                spinner.setSelection(SPINNER_ENTERTAINMENT);
+                break;
+            case "gaming":
+                spinner.setSelection(SPINNER_GAMING);
+                break;
+            case "general":
+                spinner.setSelection(SPINNER_GENERAL);
+                break;
+            case "music":
+                spinner.setSelection(SPINNER_MUSIC);
+                break;
+            case "politics":
+                spinner.setSelection(SPINNER_POLITICS);
+                break;
+            case "science-and-nature":
+                spinner.setSelection(SPINNER_SCIENCE_NATURE);
+                break;
+            case "sport":
+                spinner.setSelection(SPINNER_SPORT);
+                break;
+            case "technology":
+                spinner.setSelection(SPINNER_TECHNOLOGY);
+                break;
+        }
+        updateFragments(source);
+        closeDrawer();
+    }
+
+    @Override
     public ListView getListView() {
         return listView;
     }
 
     @Override
-    public void closeDrawer() {
-        if(drawer != null)
-            drawer.closeDrawer(GravityCompat.START);
+    public int getListViewSelected() {
+        return mListViewSelectedItem;
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        closeDrawer();
-        return true;
+    public void updateListViewSelected(int position) {
+        mListViewSelectedItem = position;
     }
 
+    @Override
+    public String getSourceName() {
+        return source_item;
+    }
+
+    @Override
     public String getSpinnerSelection(){
         return spinnerSelection;
     }
@@ -424,9 +413,33 @@ public class MainActivity extends AppCompatActivity
         return spinner;
     }
 
+
     @Override
-    public MenuItem getRefreshListButton() {
-        return refreshList;
+    public NetworkChangeReceiver getNetworkChangeReceiver() {
+        return networkChangeReceiver;
+    }
+
+    // Call when network receiver is registered
+    @Override
+    public boolean isNetworkChangeReceiverSet() {
+        return isNetworkChangeReceiverSet;
+    }
+
+    // Call after fragment cursor loading is finished
+    @Override
+    public void setNetworkChangeReceiverFalse() {
+        isNetworkChangeReceiverSet = false;
+    }
+
+    @Override
+    public ActionBarDrawerToggle getToggle() {
+        return toggle;
+    }
+
+    @Override
+    public void closeDrawer() {
+        if(drawer != null)
+            drawer.closeDrawer(GravityCompat.START);
     }
 
     @Override
@@ -440,6 +453,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public MenuItem getRefreshListButton() {
+        return refreshList;
+    }
+
+    @Override
     public boolean getRefreshStatus() {
         return isRefreshed;
     }
@@ -449,9 +467,9 @@ public class MainActivity extends AppCompatActivity
         isRefreshed = false;
     }
 
-    @Override
-    public ActionBarDrawerToggle getToggle() {
-        return toggle;
+    // For testing purposes
+    public boolean isSyncFinished(){
+        return syncFinished;
     }
 
     // For testing purposes
@@ -463,11 +481,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void hideProgressBar() {
         progressBar.setVisibility(View.INVISIBLE);
-    }
-
-    // For testing purposes
-    public boolean isSyncFinished(){
-        return syncFinished;
     }
 
     private class MyPagerAdapter extends FragmentStatePagerAdapter {

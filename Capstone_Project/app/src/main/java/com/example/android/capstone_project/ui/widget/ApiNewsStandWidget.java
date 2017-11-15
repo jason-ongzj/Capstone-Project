@@ -35,14 +35,6 @@ public class ApiNewsStandWidget extends AppWidgetProvider {
         views.setTextViewText(R.id.Category, categoryValue);
         views.setTextViewText(R.id.SortBy, sortByValue);
 
-//        Intent activityIntent = new Intent(context, ApiNewsStandWidgetConfigureActivity.class);
-//        activityIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-//        activityIntent.setData(Uri.fromParts("content", String.valueOf(appWidgetId), null));
-//        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
-//                activityIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-//
-//        views.setOnClickPendingIntent(R.id.widget_config, pendingIntent);
-
         Intent appIntent = new Intent(context, WebViewActivity.class);
         PendingIntent appPendingIntent = PendingIntent.getActivity(context, 0,
                 appIntent, PendingIntent.FLAG_UPDATE_CURRENT);

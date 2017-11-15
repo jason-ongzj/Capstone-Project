@@ -42,8 +42,6 @@ dependencies {
     compile "com.squareup.retrofit2:adapter-rxjava:$retrofitVersion"
 
     compile "com.google.android.gms:play-services-ads:$googleServicesVersion"
-    compile "com.google.android.gms:play-services-analytics:$googleServicesVersion"
-    compile "com.google.android.gms:play-services-tagmanager:$googleServicesVersion"
     compile "com.google.firebase:firebase-core:$googleServicesVersion"
 
     compile "com.android.support:appcompat-v7:$androidSdkVersion"

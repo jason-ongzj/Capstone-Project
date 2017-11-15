@@ -9,9 +9,9 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/api_news_stand_black"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/MyAppTheme">
         <provider
             android:name=".data.ArticleProvider"
             android:authorities="com.example.android.capstone_project"
@@ -20,9 +20,7 @@
         <activity
             android:name=".ui.MainActivity"
             android:label="@string/app_name"
-            android:launchMode="singleTop"
-
-            android:theme="@style/Theme.AppCompat.NoActionBar">
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -35,8 +33,7 @@
         <activity android:name=".ui.WebViewActivity" />
         <activity
             android:name=".ui.SearchActivity"
-            android:parentActivityName=".ui.MainActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+            android:parentActivityName=".ui.MainActivity" />
 
         <receiver android:name=".ui.widget.ApiNewsStandWidget">
             <intent-filter>
@@ -48,7 +45,8 @@
                 android:resource="@xml/api_news_stand_widget_info" />
         </receiver>
 
-        <activity android:name=".ui.widget.ApiNewsStandWidgetConfigureActivity">
+        <activity android:name=".ui.widget.ApiNewsStandWidgetConfigureActivity"
+            android:theme="@style/Theme.AppCompat">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>

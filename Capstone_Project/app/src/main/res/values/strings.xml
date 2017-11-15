@@ -6,6 +6,7 @@
 
     <string name="action_settings">Settings</string>
 
+    <string name="get_articles">GET_ARTICLES</string>
     <string name="get_top_articles">GET_TOP_ARTICLES</string>
     <string name="get_latest_articles">GET_LATEST_ARTICLES</string>
     <string name="appwidget_text">EXAMPLE</string>
@@ -46,6 +47,13 @@
     <string name="browse">browse</string>
 
     <string name="categoryId">Category_Id</string>
+
+    <string name="spinnerSelection">spinnerSelection</string>
+    <string name="source_item">source_item</string>
+    <string name="isRefreshed">isRefreshed</string>
+    <string name="listViewSelected">listViewSelected</string>
+    <string name="listViewRestore">listViewRestore</string>
+    <string name="layoutManagerRestore">layoutManagerRestore</string>
 
     <string name="api_news_stand">API News Stand</string>
     <string name="powered_by_news_api">Powered by News API</string>

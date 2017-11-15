@@ -23,7 +23,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 
 import com.example.android.capstone_project.R;
 import com.example.android.capstone_project.data.ArticleContract;
@@ -55,7 +54,8 @@ public class MainActivityFragment extends Fragment
     private static String source_item = "";
 
     private boolean onRotate = false;
-    private Parcelable state;
+    private Parcelable recyclerViewState;
+    private Parcelable listViewState;
 
     private Cursor sourceCursor;
 
@@ -63,11 +63,12 @@ public class MainActivityFragment extends Fragment
     private SearchArticlesAdapter mAdapter;
 
     private MyResponseReceiver responseReceiver;
-    private LinearLayoutManager linearLayoutManager;
+    private int mListViewSelectedItem = 999;
 
     private ArticleDbHelper helper;
     private String spinnerSelection = "all";
     private DbUtils utils;
+    private static String categoryId = "Category_Id";
 
     @Nullable
     @BindView(R.id.recyclerView)
@@ -80,15 +81,18 @@ public class MainActivityFragment extends Fragment
         MainActivityFragment fragment = new MainActivityFragment();
         Bundle args = new Bundle();
         fragment.setRetainInstance(true);
-        args.putInt("Category_Id", id);
+        args.putInt(categoryId, id);
         fragment.setArguments(args);
         return fragment;
     }
 
     @Override
-    public void onSourceItemClicked(String source, String category) {
+    public void onSourceItemClicked(String source, String category, View view, int pos) {
         source_item = source;
-        mCallback.onSourceItemClicked(source, category);
+        mCallback.onItemClicked(source, category);
+        view.setBackgroundColor(getResources().getColor(R.color.color_light_blue));
+        mCallback.updateListViewSelected(pos);
+        mListViewSelectedItem = mCallback.getListViewSelected();
     }
 
     @Override
@@ -110,7 +114,7 @@ public class MainActivityFragment extends Fragment
         utils = new DbUtils(helper);
 
         if (getArguments() != null) {
-            category_id = getArguments().getInt("Category_Id");
+            category_id = getArguments().getInt(categoryId);
         }
 
         if (savedInstanceState == null) {
@@ -123,15 +127,16 @@ public class MainActivityFragment extends Fragment
         super.onActivityCreated(savedInstanceState);
         if(savedInstanceState != null) {
             onRotate = true;
-            source_item = savedInstanceState.getString("source_item");
-            spinnerSelection = savedInstanceState.getString("spinnerSelection");
-//            Log.d(TAG, "onActivityCreated: " + source_item);
+            source_item = savedInstanceState.getString(getString(R.string.source_item));
+            spinnerSelection = savedInstanceState.getString(getString(R.string.spinnerSelection));
 
-            state = savedInstanceState.getParcelable("layoutManagerRestore");
+            recyclerViewState = savedInstanceState.getParcelable
+                    (getString(R.string.layoutManagerRestore));
+            listViewState = savedInstanceState.getParcelable(getString(R.string.listViewRestore));
+            mListViewSelectedItem = savedInstanceState.getInt(getString(R.string.listViewSelected));
 
             category_id = savedInstanceState.getInt(getString(R.string.categoryId));
 
-            // If intentService is running, do not start loading from database on rotation.
             if(!mCallback.getRefreshStatus()) {
                 switch (category_id) {
                     case TOP_ARTICLES:
@@ -143,7 +148,7 @@ public class MainActivityFragment extends Fragment
                 }
             }
         } else {
-            spinnerSelection = ((MainActivity) getActivity()).getSpinnerSelection();
+            spinnerSelection =  mCallback.getSpinnerSelection();
             source_item = mCallback.getSourceName();
         }
     }
@@ -151,11 +156,15 @@ public class MainActivityFragment extends Fragment
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putInt(getString(R.string.categoryId), category_id);
-        outState.putString("source_item", source_item);
-        outState.putString("spinnerSelection", spinnerSelection);
+        outState.putString(getString(R.string.source_item), source_item);
+        outState.putString(getString(R.string.spinnerSelection), spinnerSelection);
         if(mRecyclerView.getLayoutManager() != null) {
-            outState.putParcelable("layoutManagerRestore", mRecyclerView.getLayoutManager().onSaveInstanceState());
+            outState.putParcelable(getString(R.string.layoutManagerRestore), mRecyclerView
+                    .getLayoutManager().onSaveInstanceState());
         }
+        outState.putParcelable(getString(R.string.listViewRestore),
+                mCallback.getListView().onSaveInstanceState());
+        outState.putInt(getString(R.string.listViewSelected), mCallback.getListViewSelected());
 
         super.onSaveInstanceState(outState);
     }
@@ -168,12 +177,12 @@ public class MainActivityFragment extends Fragment
         boolean isConnected = activeNetwork != null &&
                 activeNetwork.isConnectedOrConnecting();
 
-        IntentFilter topArticlesIntentFilter = new IntentFilter(getString(R.string.get_top_articles));
-        responseReceiver = new MyResponseReceiver();
-        LocalBroadcastManager.getInstance(context).registerReceiver(responseReceiver, topArticlesIntentFilter);
+        IntentFilter topArticlesIntentFilter = new IntentFilter
+                    (getString(R.string.get_articles));
 
-        IntentFilter latestArticlesIntentFilter = new IntentFilter(getString(R.string.get_latest_articles));
-        LocalBroadcastManager.getInstance(context).registerReceiver(responseReceiver, latestArticlesIntentFilter);
+        responseReceiver = new MyResponseReceiver();
+        LocalBroadcastManager.getInstance(context).registerReceiver(responseReceiver,
+                    topArticlesIntentFilter);
 
         if(mCallback.getRefreshListButton()!= null)
             mCallback.getRefreshListButton().setEnabled(false);
@@ -210,9 +219,6 @@ public class MainActivityFragment extends Fragment
 
         String[] sourceSelection = new String[] {source_item};
         String[] selectionArgs = new String[] {spinnerSelection};
-        if(source_item != null && source_item.equals(""))
-        Log.d(TAG, "onCreateLoader1 : " + source_item);
-        else Log.d(TAG, "onCreateLoader2: " + source_item);
 
         Uri top_articles_uri = ArticleContract.ArticleEntry.TOP_URI;
         Uri latest_articles_uri = ArticleContract.ArticleEntry.LATEST_URI;
@@ -335,21 +341,20 @@ public class MainActivityFragment extends Fragment
             mCallback.setNetworkChangeReceiverFalse();
         }
 
-        linearLayoutManager = new LinearLayoutManager(getActivity());
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         mAdapter = new SearchArticlesAdapter(getActivity(), MAIN_ACTIVITY);
         mAdapter.setCursor(cursor);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.setLayoutManager(linearLayoutManager);
 
         // Restore rotation
-        if(state!= null && onRotate){
+        if(recyclerViewState != null && onRotate){
             updateNavAdapter();
-            mRecyclerView.getLayoutManager().onRestoreInstanceState(state);
+            mRecyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
             mCallback.updateRotationStatus();
         }
 
         Log.d(TAG, "onLoadFinished: " + mCallback.getRotationStatus());
-//        state = null;
         onRotate = false;
     }
 
@@ -365,17 +370,22 @@ public class MainActivityFragment extends Fragment
     }
 
     private void updateNavAdapter(){
-        ListView listView = mCallback.getListView();
-
         if (sourceCursor != null) {
             sourceCursor.close();
         }
 
         sourceCursor = utils.querySources();
         NavigationAdapter navAdapter = new NavigationAdapter(getActivity(), this);
+        if(mListViewSelectedItem != 999)
+            navAdapter.setSelectedItem(mListViewSelectedItem);
         navAdapter.setCursor(sourceCursor);
-        listView.setAdapter(navAdapter);
-        listView.setVisibility(View.VISIBLE);
+        mCallback.getListView().setAdapter(navAdapter);
+        mCallback.getListView().setVisibility(View.VISIBLE);
+
+        // Callback from MainActivity
+        if(listViewState != null) {
+            mCallback.getListView().onRestoreInstanceState(listViewState);
+        }
     }
 
     public void hideRecyclerView(){
@@ -386,21 +396,20 @@ public class MainActivityFragment extends Fragment
         source_item = source;
     }
 
-    // Accessed from broadcast receiver. Using restart loader will ensure there will always be 2
+    // Accessed from broadcast receiver. Using restart loader will ensure there will always be only 2
     // loaders, while initLoader will create endless amount of loaders.
     public void startLoader(int loaderID){
-        Log.d(TAG, "startLoader: ");
         getLoaderManager().restartLoader(loaderID, null, this);
     }
 
     // Accessed from MainActivity to reload when spinner selection changes
     public void restartLoader(int loaderID, String itemSelected){
-        Log.d(TAG, "restartLoader: ");
         spinnerSelection = itemSelected;
         getLoaderManager().restartLoader(loaderID, null, this);
         mAdapter.notifyDataSetChanged();
     }
 
+    // Broadcast receiver to receive output from GetArticlesListService
     private class MyResponseReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -409,7 +418,8 @@ public class MainActivityFragment extends Fragment
                     ArrayList<Article> articleArrayList = intent.getParcelableArrayListExtra
                             (getString(R.string.get_top_articles));
                     if(articleArrayList != null && isAdded()) {
-                        utils.insertIntoDb(articleArrayList, getString(R.string.top).toLowerCase());
+                        utils.insertIntoDb(articleArrayList,
+                                getString(R.string.top).toLowerCase());
                         startLoader(ID_TOP_ARTICLES_LOADER);
                     }
                     break;
@@ -417,7 +427,8 @@ public class MainActivityFragment extends Fragment
                     articleArrayList = intent.getParcelableArrayListExtra
                             (getString(R.string.get_latest_articles));
                     if(articleArrayList!= null && isAdded()){
-                        utils.insertIntoDb(articleArrayList, getString(R.string.latest).toLowerCase());
+                        utils.insertIntoDb(articleArrayList,
+                                getString(R.string.latest).toLowerCase());
                         startLoader(ID_LATEST_ARTICLES_LOADER);
                     }
                     break;

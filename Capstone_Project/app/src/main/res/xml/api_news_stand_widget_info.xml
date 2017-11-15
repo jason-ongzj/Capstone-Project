@@ -3,9 +3,9 @@
     android:configure="com.example.android.capstone_project.ui.widget.ApiNewsStandWidgetConfigureActivity"
     android:initialKeyguardLayout="@layout/api_news_stand_widget"
     android:initialLayout="@layout/api_news_stand_widget"
-    android:minHeight="180dp"
-    android:minWidth="180dp"
-    android:previewImage="@drawable/history_icon"
+    android:minHeight="250dp"
+    android:minWidth="300dp"
+    android:previewImage="@mipmap/api_news_stand_black"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen">

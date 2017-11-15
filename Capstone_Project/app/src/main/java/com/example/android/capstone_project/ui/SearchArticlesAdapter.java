@@ -95,9 +95,11 @@ public class SearchArticlesAdapter extends
                 holder.descriptionTv.setText(mCursor.getString(ArticleQuery.SEARCH_DESCRIPTION));
                 urlToImage = mCursor.getString(ArticleQuery.SEARCH_URL_TO_IMAGE);
             }
-            if (urlToImage == null || urlToImage.equals("")) {
-                holder.imageView.setMaxHeight(0);
-            } else Glide.with(mContext).load(urlToImage).into(holder.imageView);
+//            try {
+                Glide.with(mContext).load(urlToImage).into(holder.imageView);
+//            } catch (Exception e){
+//                Glide.with(mContext).load(R.drawable.placeholder_image).into(holder.imageView);
+//            }
         }
     }
 

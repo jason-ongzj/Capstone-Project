@@ -58,7 +58,6 @@ public class GetArticlesListService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        Log.d(TAG, "onHandleIntent: " + Thread.activeCount());
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(NewsAPI.BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -78,13 +77,11 @@ public class GetArticlesListService extends IntentService {
     }
 
     private void getArticles(final String input) {
-
         newsAPI.getSourcesObservable("", "en")
             .flatMap(new Func1<NewsAPISources, Observable<Source>>() {
                 @Override
                 public Observable<Source> call(NewsAPISources newsAPISources) {
                     sourcesList = newsAPISources.getSources();
-                    Log.d(TAG, "call: " + sourcesList.size());
                     return Observable.from(sourcesList);
                 }
             }).flatMap(source ->
@@ -126,14 +123,17 @@ public class GetArticlesListService extends IntentService {
                     @Override
                     public void onCompleted() {
                         count++;
-                        // 2 intent service tasks running, we only to broadcast once
+                        // 2 intent service tasks running, we only intend to broadcast once
                         if(count == 2) {
                             Log.d(TAG, "onCompleted: top" + topArticlesArray.size());
                             Log.d(TAG, "onCompleted: latest" + latestArticlesArray.size());
-                            Intent localIntent = new Intent(getString(R.string.get_top_articles));
-                            localIntent.putParcelableArrayListExtra("GET_TOP_ARTICLES", topArticlesArray);
-                            localIntent.putParcelableArrayListExtra("GET_LATEST_ARTICLES", latestArticlesArray);
-                            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(localIntent);
+                            Intent localIntent = new Intent(getString(R.string.get_articles));
+                            localIntent.putParcelableArrayListExtra
+                                    (getString(R.string.get_top_articles), topArticlesArray);
+                            localIntent.putParcelableArrayListExtra
+                                    (getString(R.string.get_latest_articles), latestArticlesArray);
+                            LocalBroadcastManager.getInstance(getApplicationContext())
+                                    .sendBroadcast(localIntent);
                             count = 0;
                         }
                     }

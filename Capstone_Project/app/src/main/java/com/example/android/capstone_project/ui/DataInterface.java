@@ -8,21 +8,35 @@ import android.widget.Spinner;
 import com.example.android.capstone_project.others.NetworkChangeReceiver;
 
 interface DataInterface {
+    void onItemClicked(String source, String category);
+
     ListView getListView();
-    void closeDrawer();
-//    void updateFragments(String source);
-    void onSourceItemClicked(String source, String category);
+    int getListViewSelected();
+    void updateListViewSelected(int position);
+
+    String getSourceName();
     Spinner getSpinner();
-    ActionBarDrawerToggle getToggle();
-    MenuItem getRefreshListButton();
-    void setSyncFinished();
-    boolean getRefreshStatus();
-    void setRefreshStatusFalse();
+    String getSpinnerSelection();
+
+    NetworkChangeReceiver getNetworkChangeReceiver();
     boolean isNetworkChangeReceiverSet();
     void setNetworkChangeReceiverFalse();
-    NetworkChangeReceiver getNetworkChangeReceiver();
-    void hideProgressBar();
-    String getSourceName();
+
+    ActionBarDrawerToggle getToggle();
+    void closeDrawer();
+
     void updateRotationStatus();
     boolean getRotationStatus();
+
+    MenuItem getRefreshListButton();
+    boolean getRefreshStatus();
+    void setRefreshStatusFalse();
+
+    void setSyncFinished();
+
+    void hideProgressBar();
+
+
+
+
 }
