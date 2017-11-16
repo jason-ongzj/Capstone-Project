@@ -16,7 +16,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -70,8 +69,6 @@ public class SearchActivity extends AppCompatActivity
     private boolean editTextMode = true;
     private String previousSearchTerm = "";
 
-    public static final String TAG = "SearchActivity";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,6 +93,34 @@ public class SearchActivity extends AppCompatActivity
         firebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
         editText.setSingleLine(true);
+
+        if(savedInstanceState != null){
+            editTextMode = savedInstanceState.getBoolean(getString(R.string.editTextMode));
+            previousSearchTerm = savedInstanceState.getString(getString(R.string.previousSearchTerm));
+            state = savedInstanceState.getParcelable(getString(R.string.layoutManagerRestore));
+
+            if(editTextMode){
+                editText.setCursorVisible(true);
+                searchHistoryView.setVisibility(View.VISIBLE);
+                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+            } else {
+                editText.setCursorVisible(false);
+                searchHistoryView.setVisibility(View.INVISIBLE);
+                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+            }
+
+            if(!previousSearchTerm.equals("")){
+                mCursor = utils.queryCombinedArticleLists(previousSearchTerm);
+                LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+                SearchArticlesAdapter adapter = new SearchArticlesAdapter(this, SEARCH_ACTIVITY);
+                adapter.setCursor(mCursor);
+                mRecyclerView.setAdapter(adapter);
+                mRecyclerView.setLayoutManager(linearLayoutManager);
+                mRecyclerView.getLayoutManager().onRestoreInstanceState(state);
+            }
+
+            getSupportLoaderManager().restartLoader(ID_SEARCH_ARTICLES, null, this);
+        }
 
         clearHistoryView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -135,6 +160,7 @@ public class SearchActivity extends AppCompatActivity
             public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
                 if(i == EditorInfo.IME_ACTION_SEARCH){
                     // Set previous search term for saveInstanceState;
+                    editTextMode = false;
                     previousSearchTerm = editText.getText().toString();
 
                     InputMethodManager inm = (InputMethodManager) textView.getContext()
@@ -193,43 +219,12 @@ public class SearchActivity extends AppCompatActivity
                 return false;
             }
         });
-
-        if(savedInstanceState != null){
-            editTextMode = savedInstanceState.getBoolean("editTextMode");
-            previousSearchTerm = savedInstanceState.getString("previousSearchTerm");
-            state = savedInstanceState.getParcelable(getString(R.string.layoutManagerRestore));
-
-            Log.d(TAG, "onCreate: " + editTextMode);
-
-            if(editTextMode){
-                editText.setCursorVisible(true);
-                searchHistoryView.setVisibility(View.VISIBLE);
-                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-            } else {
-                editText.setCursorVisible(false);
-                searchHistoryView.setVisibility(View.INVISIBLE);
-                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-            }
-
-            if(!previousSearchTerm.equals("")){
-
-                mCursor = utils.queryCombinedArticleLists(previousSearchTerm);
-                LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-                SearchArticlesAdapter adapter = new SearchArticlesAdapter(this, SEARCH_ACTIVITY);
-                adapter.setCursor(mCursor);
-                mRecyclerView.setAdapter(adapter);
-                mRecyclerView.setLayoutManager(linearLayoutManager);
-                mRecyclerView.getLayoutManager().onRestoreInstanceState(state);
-            }
-
-            getSupportLoaderManager().restartLoader(ID_SEARCH_ARTICLES, null, this);
-        }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putBoolean("editTextMode", editTextMode);
-        outState.putString("previousSearchTerm", previousSearchTerm);
+        outState.putBoolean(getString(R.string.editTextMode), editTextMode);
+        outState.putString(getString(R.string.previousSearchTerm), previousSearchTerm);
         if(mRecyclerView.getLayoutManager() != null){
             outState.putParcelable(getString(R.string.layoutManagerRestore), mRecyclerView.
                     getLayoutManager().onSaveInstanceState());
@@ -246,6 +241,7 @@ public class SearchActivity extends AppCompatActivity
 
     @Override
     public void onHistoryItemClicked(String history_item) {
+        // Hide keyboard and search history on itemClick
         editText.setText(history_item);
         editText.setCursorVisible(false);
         editTextMode = false;

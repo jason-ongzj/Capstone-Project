@@ -100,6 +100,8 @@ public class MainActivity extends AppCompatActivity
     private int SPINNER_SPORT = 8;
     private int SPINNER_TECHNOLOGY = 9;
 
+    public static final String TAG = "MainActivity";
+
     @NonNull
     public GetArticlesIdlingResource getIdleResource(){
         if (mIdlingResource == null) {
@@ -179,15 +181,14 @@ public class MainActivity extends AppCompatActivity
                     if(spinnerSelection.equals(getString(R.string.science))) {
                         spinnerSelection = getString(R.string.science_and_nature).toLowerCase();
                     }
-                    Toast.makeText(MainActivity.this, spinnerSelection, Toast.LENGTH_SHORT).show();
 
                     // Only activate from user spinner selection
                     if(!isRotated && !isSourceItemClicked) {
-                        updateFragments(source_item);
                         NavigationAdapter adapter = (NavigationAdapter) listView.getAdapter();
                         mListViewSelectedItem = 999;
                         adapter.setSelectedItem(mListViewSelectedItem);
                         adapter.notifyDataSetChanged();
+                        updateFragments(source_item);
                     }
 
                     // Reset rotation state and item click state
@@ -196,15 +197,17 @@ public class MainActivity extends AppCompatActivity
 
                     // Use another variable to keep track of current source chosen
                     prev_source_item = source_item;
-
-                    // Source item needs to be kept empty for all times, so as to react to changes due
-                    // to nav item clicks as well as spinner item clicks
-                    source_item = "";
                 }
+
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
+                isRotated = false;
+                isSourceItemClicked = false;
+                prev_source_item = source_item;
+                source_item = "";
+                Toast.makeText(MainActivity.this, "Hello", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -347,38 +350,48 @@ public class MainActivity extends AppCompatActivity
         isRefreshed = false;
         // Decouple item click from spinner selection. Only link between adapter item and spinner
         // is that onClick changes the display of spinner selection
-        isSourceItemClicked = true;
-        spinnerSelection = category;
-        switch (category) {
-            case "business":
-                spinner.setSelection(SPINNER_BUSINESS);
-                break;
-            case "entertainment":
-                spinner.setSelection(SPINNER_ENTERTAINMENT);
-                break;
-            case "gaming":
-                spinner.setSelection(SPINNER_GAMING);
-                break;
-            case "general":
-                spinner.setSelection(SPINNER_GENERAL);
-                break;
-            case "music":
-                spinner.setSelection(SPINNER_MUSIC);
-                break;
-            case "politics":
-                spinner.setSelection(SPINNER_POLITICS);
-                break;
-            case "science-and-nature":
-                spinner.setSelection(SPINNER_SCIENCE_NATURE);
-                break;
-            case "sport":
-                spinner.setSelection(SPINNER_SPORT);
-                break;
-            case "technology":
-                spinner.setSelection(SPINNER_TECHNOLOGY);
-                break;
+        if(spinnerSelection.equals(category)){
+            isSourceItemClicked = false;
+        } else {
+            source_item = source;
+            isSourceItemClicked = true;
+            switch (category) {
+                case "business":
+                    spinner.setSelection(SPINNER_BUSINESS);
+                    break;
+                case "entertainment":
+                    spinner.setSelection(SPINNER_ENTERTAINMENT);
+                    break;
+                case "gaming":
+                    spinner.setSelection(SPINNER_GAMING);
+                    break;
+                case "general":
+                    spinner.setSelection(SPINNER_GENERAL);
+                    break;
+                case "music":
+                    spinner.setSelection(SPINNER_MUSIC);
+                    break;
+                case "politics":
+                    spinner.setSelection(SPINNER_POLITICS);
+                    break;
+                case "science-and-nature":
+                    spinner.setSelection(SPINNER_SCIENCE_NATURE);
+                    break;
+                case "sport":
+                    spinner.setSelection(SPINNER_SPORT);
+                    break;
+                case "technology":
+                    spinner.setSelection(SPINNER_TECHNOLOGY);
+                    break;
+            }
+            spinnerSelection = category;
         }
-        updateFragments(source);
+        updateFragments(source_item);
+
+        // Source item needs to be kept empty for all times, so as to react to changes due
+        // to nav item clicks as well as spinner item clicks
+        source_item = "";
+
         closeDrawer();
     }
 
@@ -412,7 +425,6 @@ public class MainActivity extends AppCompatActivity
     public Spinner getSpinner() {
         return spinner;
     }
-
 
     @Override
     public NetworkChangeReceiver getNetworkChangeReceiver() {

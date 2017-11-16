@@ -55,6 +55,9 @@
     <string name="listViewRestore">listViewRestore</string>
     <string name="layoutManagerRestore">layoutManagerRestore</string>
 
+    <string name="editTextMode">editTextMode</string>
+    <string name="previousSearchTerm">previousSearchTerm</string>
+
     <string name="api_news_stand">API News Stand</string>
     <string name="powered_by_news_api">Powered by News API</string>
 

@@ -12,8 +12,6 @@ import com.example.android.capstone_project.data.DbUtils;
 
 public class WidgetService extends RemoteViewsService {
 
-    public static final String TAG = "WidgetService";
-
     @Override
     public RemoteViewsFactory onGetViewFactory(Intent intent) {
         Cursor cursor;
