@@ -10,8 +10,8 @@ import java.util.ArrayList;
 
 public class DbUtils {
 
-    private ArticleDbHelper helper;
-    private SQLiteDatabase db;
+    private final ArticleDbHelper helper;
+    private final SQLiteDatabase db;
 
     public DbUtils(ArticleDbHelper helper){
         this.helper = helper;
@@ -67,8 +67,7 @@ public class DbUtils {
                 + ArticleContract.ArticleEntry.COLUMN_CATEGORY + " FROM "
                 + ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE + " GROUP BY "
                 + ArticleContract.ArticleEntry.COLUMN_SOURCE;
-        Cursor cursor = db.rawQuery(sql, null);
-        return cursor;
+        return db.rawQuery(sql, null);
     }
 
     public Cursor queryCombinedArticleLists(String query){
@@ -87,7 +86,6 @@ public class DbUtils {
                 + whereClause + " UNION "
                 + "SELECT " + output + " FROM " + ArticleContract.ArticleEntry.LATEST_ARTICLE_TABLE
                 + whereClause;
-        Cursor cursor = db.rawQuery(sql, null);
-        return cursor;
+        return db.rawQuery(sql, null);
     }
 }

@@ -31,7 +31,7 @@ public class MainActivityNavigationDrawerTest {
     private IdlingResource mIdlingResource;
 
     @Rule
-    public ActivityTestRule<MainActivity> mActivityTestRule =
+    public final ActivityTestRule<MainActivity> mActivityTestRule =
             new ActivityTestRule<>(MainActivity.class);
 
     @Before

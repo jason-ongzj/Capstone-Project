@@ -36,7 +36,6 @@ public class GetArticlesListService extends IntentService {
     private ArrayList<Article> latestArticlesArray = new ArrayList<>();
 
     private NewsAPI newsAPI;
-    private static String api_Key = "4bea82e302ea46d188f106ffd0121590";
 
     private int count = 0;
 

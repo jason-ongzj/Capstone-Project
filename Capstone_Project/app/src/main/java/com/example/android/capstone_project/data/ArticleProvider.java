@@ -16,7 +16,7 @@ public class ArticleProvider extends ContentProvider {
 
     private static final int LATEST_ARTICLES = 200;
 
-    public static final int SEARCH_ARTICLES = 300;
+    private static final int SEARCH_ARTICLES = 300;
 
     private ArticleDbHelper mArticleDbHelper;
     private static final UriMatcher sUriMatcher = buildUriMatcher();

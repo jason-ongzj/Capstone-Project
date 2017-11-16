@@ -10,7 +10,7 @@ public class GetArticlesIdlingResource implements IdlingResource {
     @Nullable
     private volatile ResourceCallback mCallback;
 
-    private MainActivity activity;
+    private final MainActivity activity;
 
     public GetArticlesIdlingResource(MainActivity activity){
         this.activity = activity;

@@ -3,6 +3,7 @@ package com.example.android.capstone_project.ui;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -95,11 +96,10 @@ public class SearchArticlesAdapter extends
                 holder.descriptionTv.setText(mCursor.getString(ArticleQuery.SEARCH_DESCRIPTION));
                 urlToImage = mCursor.getString(ArticleQuery.SEARCH_URL_TO_IMAGE);
             }
-//            try {
-                Glide.with(mContext).load(urlToImage).into(holder.imageView);
-//            } catch (Exception e){
-//                Glide.with(mContext).load(R.drawable.placeholder_image).into(holder.imageView);
-//            }
+
+            Drawable mDefaultBackground = mContext.getDrawable(R.drawable.placeholder_image);
+            Glide.with(mContext).load(urlToImage)
+                    .centerCrop().error(mDefaultBackground).into(holder.imageView);
         }
     }
 

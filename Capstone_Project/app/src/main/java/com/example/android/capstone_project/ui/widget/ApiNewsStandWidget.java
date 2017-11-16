@@ -13,8 +13,6 @@ import com.example.android.capstone_project.ui.WebViewActivity;
 
 public class ApiNewsStandWidget extends AppWidgetProvider {
 
-    public static final String TAG = "Widget";
-
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
 

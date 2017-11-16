@@ -17,7 +17,7 @@ import butterknife.ButterKnife;
 public class NavigationAdapter extends BaseAdapter {
 
     private Cursor mCursor;
-    private Context mContext;
+    private final Context mContext;
     private int mSelection = 999;
 
     @Nullable

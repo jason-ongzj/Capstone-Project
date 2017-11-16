@@ -43,7 +43,7 @@ public class MainActivityFragment extends Fragment
 
     public final int TOP_ARTICLES = 0;
     public final int LATEST_ARTICLES = 1;
-    private int MAIN_ACTIVITY = 0;
+    private final int MAIN_ACTIVITY = 0;
     private final String TAG = "MainActivityFragment";
 
     private static final int ID_TOP_ARTICLES_LOADER = 156;
@@ -68,7 +68,7 @@ public class MainActivityFragment extends Fragment
     private ArticleDbHelper helper;
     private String spinnerSelection = "all";
     private DbUtils utils;
-    private static String categoryId = "Category_Id";
+    private static final String categoryId = "Category_Id";
 
     @Nullable
     @BindView(R.id.recyclerView)

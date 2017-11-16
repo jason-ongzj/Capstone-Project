@@ -91,13 +91,13 @@ public class ApiNewsStandWidgetConfigureActivity extends AppCompatActivity {
         }
     };
 
-    String[] stringArray = {"business", "entertainment", "gaming", "general", "music",
+    final String[] stringArray = {"business", "entertainment", "gaming", "general", "music",
             "politics", "science", "technology", "latest", "top"};
 
-    Boolean[] booleanArray = {businessChecked, entertainmentChecked, gamingChecked, generalChecked,
+    final Boolean[] booleanArray = {businessChecked, entertainmentChecked, gamingChecked, generalChecked,
         musicChecked, politicsChecked, scienceChecked, technologyChecked, latestChecked, topChecked};
 
-    RadioButton[] radioButtonsArray = {mBusiness, mEntertainment, mGaming, mGeneral, mMusic, mPolitics,
+    final RadioButton[] radioButtonsArray = {mBusiness, mEntertainment, mGaming, mGeneral, mMusic, mPolitics,
         mScience, mTechnology, mLatest, mTop};
 
     public ApiNewsStandWidgetConfigureActivity() {
@@ -129,8 +129,7 @@ public class ApiNewsStandWidgetConfigureActivity extends AppCompatActivity {
 
     public static String loadCategoryPref(Context context, int appWidgetId){
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
-        String categoryValue = prefs.getString(PREF_PREFIX_KEY + appWidgetId + " Category", null);
-        return categoryValue;
+        return prefs.getString(PREF_PREFIX_KEY + appWidgetId + " Category", null);
     }
 
     private void saveSortByPref(Context context, int appWidgetId){
@@ -142,8 +141,7 @@ public class ApiNewsStandWidgetConfigureActivity extends AppCompatActivity {
 
     public static String loadSortByPref(Context context, int appWidgetId){
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
-        String sortByValue = prefs.getString(PREF_PREFIX_KEY + appWidgetId + " SortBy", null);
-        return sortByValue;
+        return prefs.getString(PREF_PREFIX_KEY + appWidgetId + " SortBy", null);
     }
 
     @Override

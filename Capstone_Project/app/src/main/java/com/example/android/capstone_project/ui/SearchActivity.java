@@ -58,7 +58,6 @@ public class SearchActivity extends AppCompatActivity
     View clearHistoryView;
 
     private Cursor mCursor;
-    private ArticleDbHelper helper;
     private DbUtils utils;
     private FirebaseAnalytics firebaseAnalytics;
     private Context context;
@@ -70,7 +69,6 @@ public class SearchActivity extends AppCompatActivity
 
     private boolean editTextMode = true;
     private String previousSearchTerm = "";
-    private Parcelable state;
 
     public static final String TAG = "SearchActivity";
 
@@ -90,9 +88,10 @@ public class SearchActivity extends AppCompatActivity
         mSearchHistoryAdapter = new SearchHistoryAdapter(this, this);
         mListView.setAdapter(mSearchHistoryAdapter);
 
-        helper = new ArticleDbHelper(this);
+        ArticleDbHelper helper = new ArticleDbHelper(this);
         utils = new DbUtils(helper);
         context = this;
+        Parcelable state;
 
         firebaseAnalytics = FirebaseAnalytics.getInstance(this);
 

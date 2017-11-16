@@ -15,8 +15,6 @@ public class WebViewActivity extends AppCompatActivity {
     @BindView(R.id.webView)
     WebView webView;
 
-    private String url;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,7 +22,7 @@ public class WebViewActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         if(getIntent().getExtras() != null){
-            url = getIntent().getExtras().getString(this.getString(R.string.url));
+            String url = getIntent().getExtras().getString(this.getString(R.string.url));
             webView.getSettings().setJavaScriptEnabled(true);
             webView.setWebViewClient(new WebViewClient());
             webView.loadUrl(url);
