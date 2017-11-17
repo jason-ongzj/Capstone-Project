@@ -99,6 +99,7 @@
                     android:background="@color/grey"
                     android:paddingBottom="10dp"
                     android:paddingStart="30dp"
+                    android:paddingEnd="30dp"
                     android:paddingTop="10dp"
                     android:text="@string/clear_search_history"
                     android:textColor="@color/darker_gray"

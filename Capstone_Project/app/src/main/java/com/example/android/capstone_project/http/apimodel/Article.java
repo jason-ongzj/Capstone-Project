@@ -10,19 +10,19 @@ public class Article implements Parcelable{
 
     @SerializedName("author")
     @Expose
-    private final String author;
+    private String author;
     @SerializedName("title")
     @Expose
     private String title;
     @SerializedName("description")
     @Expose
-    private final String description;
+    private String description;
     @SerializedName("url")
     @Expose
-    private final String url;
+    private String url;
     @SerializedName("urlToImage")
     @Expose
-    private final String urlToImage;
+    private String urlToImage;
     @SerializedName("publishedAt")
     @Expose
     private final String publishedAt;

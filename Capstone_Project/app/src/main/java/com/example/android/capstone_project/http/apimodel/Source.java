@@ -3,8 +3,6 @@ package com.example.android.capstone_project.http.apimodel;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.List;
-
 public class Source {
 
     @SerializedName("id")
@@ -28,12 +26,6 @@ public class Source {
     @SerializedName("country")
     @Expose
     private String country;
-//    @SerializedName("urlsToLogos")
-//    @Expose
-//    private UrlsToLogos urlsToLogos;
-    @SerializedName("sortBysAvailable")
-    @Expose
-    private List<String> sortBysAvailable = null;
 
     public String getId() {
         return id;
@@ -89,14 +81,6 @@ public class Source {
 
     public void setCountry(String country) {
         this.country = country;
-    }
-
-    public List<String> getSortBysAvailable() {
-        return sortBysAvailable;
-    }
-
-    public void setSortBysAvailable(List<String> sortBysAvailable) {
-        this.sortBysAvailable = sortBysAvailable;
     }
 
 }

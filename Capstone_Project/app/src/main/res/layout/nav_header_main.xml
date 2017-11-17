@@ -12,6 +12,7 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:padding="12dp"
+        android:contentDescription="@string/image"
         android:src="@mipmap/api_news_stand" />
 
     <LinearLayout

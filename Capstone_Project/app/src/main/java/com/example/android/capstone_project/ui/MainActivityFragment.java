@@ -43,7 +43,6 @@ public class MainActivityFragment extends Fragment
     public final int TOP_ARTICLES = 0;
     public final int LATEST_ARTICLES = 1;
     private final int MAIN_ACTIVITY = 0;
-    private final String TAG = "MainActivityFragment";
 
     private static final int ID_TOP_ARTICLES_LOADER = 156;
     private static final int ID_LATEST_ARTICLES_LOADER = 249;
@@ -73,8 +72,6 @@ public class MainActivityFragment extends Fragment
     @BindView(R.id.recyclerView)
     RecyclerView mRecyclerView;
 
-    public MainActivityFragment() {
-    }
 
     public static MainActivityFragment newInstance(int id) {
         MainActivityFragment fragment = new MainActivityFragment();

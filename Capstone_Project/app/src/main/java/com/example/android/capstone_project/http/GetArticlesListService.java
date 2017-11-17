@@ -124,8 +124,6 @@ public class GetArticlesListService extends IntentService {
                         count++;
                         // 2 intent service tasks running, we only intend to broadcast once
                         if(count == 2) {
-                            Log.d(TAG, "onCompleted: top" + topArticlesArray.size());
-                            Log.d(TAG, "onCompleted: latest" + latestArticlesArray.size());
                             Intent localIntent = new Intent(getString(R.string.get_articles));
                             localIntent.putParcelableArrayListExtra
                                     (getString(R.string.get_top_articles), topArticlesArray);
@@ -139,7 +137,6 @@ public class GetArticlesListService extends IntentService {
 
                     @Override
                     public void onError(Throwable e) {
-                        Log.d(TAG, "onError: " + e);
                     }
 
                     @Override

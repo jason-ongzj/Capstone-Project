@@ -128,8 +128,7 @@
         <android.support.v7.widget.RecyclerView
             android:id="@+id/search_recyclerView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:elevation="0dp">
+            android:layout_height="match_parent">
         </android.support.v7.widget.RecyclerView>
 
     </FrameLayout>

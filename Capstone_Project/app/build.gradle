@@ -7,7 +7,7 @@ android {
         release {
             keyAlias 'keystore'
             keyPassword 'password'
-            storeFile file('D:/Android_Nanodegree/Project Submission/Capstone Project/Capstone-Project/Capstone_Project/ApiNewsStandKeyStore.jks')
+            storeFile file("$rootDir/ApiNewsStandKeyStore.jks")
             storePassword 'password'
         }
     }

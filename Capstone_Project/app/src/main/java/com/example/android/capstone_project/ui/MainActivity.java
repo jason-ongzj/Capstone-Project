@@ -33,7 +33,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.android.capstone_project.R;
 import com.example.android.capstone_project.others.GetArticlesIdlingResource;
@@ -99,8 +98,6 @@ public class MainActivity extends AppCompatActivity
     private int SPINNER_SCIENCE_NATURE = 7;
     private int SPINNER_SPORT = 8;
     private int SPINNER_TECHNOLOGY = 9;
-
-    public static final String TAG = "MainActivity";
 
     @NonNull
     public GetArticlesIdlingResource getIdleResource(){
@@ -203,11 +200,6 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
-                isRotated = false;
-                isSourceItemClicked = false;
-                prev_source_item = source_item;
-                source_item = "";
-                Toast.makeText(MainActivity.this, "Hello", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -311,14 +303,14 @@ public class MainActivity extends AppCompatActivity
         isNetworkChangeReceiverSet = true;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Please connect to the Internet.")
-                .setPositiveButton("Connect", new DialogInterface.OnClickListener() {
+        builder.setMessage(getString(R.string.connect_to_internet))
+                .setPositiveButton(getString(R.string.connect), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         startActivityForResult(new Intent(Settings.ACTION_WIFI_SETTINGS), 999);
                         dialog.dismiss();
                     }
                 })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                .setNegativeButton(getString(R.string.cancel), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.dismiss();
                     }
